@@ -66,8 +66,8 @@ organization="Algorand"
 
 
 BLS is a digital signature scheme with compression properties.
-With a given set of signatures (sig_1, ..., sig_n) anyone can produce
-a compressed signature sig_compressed. The same is true for a set of
+With a given set of signatures (signature\_1, ..., signature\_n) anyone can produce
+a compressed signature signature\_compressed. The same is true for a set of
 private keys or public keys, while keeping the connection between sets
 (a compressed public key is associated to its compressed public key).
 Furthermore, the BLS signature scheme is deterministic, non-malleable,
@@ -80,7 +80,7 @@ __old version__
 The BLS signature scheme was introduced by Boneh–Lynn–Shacham
 in 2001. The signature scheme relies on pairing-friendly curves and
 supports non-interactive aggregation properties.
-That is, given a collection of signatures (signature_1, ..., signature_n), anyone
+That is, given a collection of signatures (signature\_1, ..., signature\_n), anyone
 can produce a short signature (signature) that authenticates the entire
 collection. BLS signature scheme is simple, efficient and can be used
 in a variety of network protocols and systems to compress signatures
@@ -111,18 +111,20 @@ of important efficiency properties:
 
 1. The public key and the signatures are encoded as single group elements.
 1. Verification requires 2 pairing operations.
-1. A collection of signatures (signature_1, ..., signature_n) can be compressed
+1. A collection of signatures (signature\_1, ..., signature\_n) can be compressed
 into a single signature (signature). Moreover, the compressed signature can
 be verified using only n+1 pairings (as opposed to 2n pairings, when verifying
-naively n signatures).
+n signatures separately).
 
-Given the above properties,
 <!---
 we believe the scheme will find very interesting
 applications.
 --->
+
+Given the above properties,
 the scheme enables many interesting applications.
 The immediate applications include
+
 * authentication and integrity for Public Key Infrastructure (PKI) and blockchains.
 
   * The usage is similar to classical digital signatures, such as ECDSA.
@@ -186,7 +188,7 @@ generate a new signature that authenticates the same list of messages and public
 * Verifier:  The Verifier holds a public key PK. It receives (message, signature)
    that it wishes to verify.
 
-* Aggregator: The Aggregator receives a collection of signatures (signature_1, ..., signature_n) that it wishes to compress into a short signature.
+* Aggregator: The Aggregator receives a collection of signatures (signature\_1, ..., signature\_n) that it wishes to compress into a short signature.
 --->
 
 ## Signature Scheme Algorithms and Properties
@@ -197,23 +199,25 @@ BLS comes with the following API:
 * a key generation algorithm that generates a public
   key PK and a private key SK
 
-      KeyGen() -> PK, SK
+    KeyGen() -> PK, SK
 
-* a sign algorithm that generates a deterministic signature for a message and a
+* a signing algorithm that generates a deterministic signature for a message and a
 secret key
 
-      Sign(SK, message) -> signature
+    Sign(SK, message) -> signature
+
 <!---
    The Signer, given an input message, uses the private key SK to
    obtain and output a signature.
 
-      signature = Sign(SK, message)
+    signature = Sign(SK, message)
 
    The BLS signing algorithm is deterministic.
 
-<!---
+<!----
    may be deterministic or randomized, depending
    on the scheme. Looking ahead, BLS instantiates a deterministic signing algorithm.
+---->
 --->
 
 * a verification algorithm that outputs VALID if signature is a valid signature of message, and INVALID otherwise.
@@ -223,11 +227,12 @@ secret key
    that signature is indeed produced by the signer holding the associated secret key.   Thus, the digital scheme also comes with an algorithm
 --->
 
-      Verify(PK, message, signature) -> VALID or INVALID
+    Verify(PK, message, signature) -> VALID or INVALID
 
-<!----
+<!---
    that outputs VALID if signature is a valid signature of message, and INVALID otherwise.
 --->
+
    We require that SK, PK, signature and message are octet strings.
 
 ### Aggregation
@@ -235,7 +240,7 @@ secret key
   An aggregatable signature scheme includes an algorithm that allows to compress a
   collection of signatures into a short signature.
 
-      Aggregate((PK_1, signature_1), ..., (PK_n, signature_n)) -> signature
+    Aggregate((PK_1, signature_1), ..., (PK_n, signature_n)) -> signature
 
   Note that the aggregator does not need to know the messages corresponding to individual
   signatures.
@@ -243,15 +248,17 @@ secret key
   The scheme also includes an algorithm to verify an aggregated signature, given a collection
   of corresponding public keys, the aggregated signature, and one or more messages.
 
-      Verify-Aggregated((PK_1, message_1), ..., (PK_n, message_n), signature) -> VALID or INVALID
+    Verify-Aggregated((PK_1, message_1), ..., (PK_n, message_n), signature)
+        -> VALID or INVALID
 
-  that outputs VALID if signature is a valid aggregated signature of messages message_1, ..., message_n, and
+  that outputs VALID if signature is a valid aggregated signature of messages message\_1, ..., message\_n, and
   INVALID otherwise.
 
   The verification algorithm may also accept a simpler interface that allows
-  to verify an aggregate signature of the same message. That is, message_1 = message_2 = ... = message_n.
+  to verify an aggregate signature of the same message. That is, message\_1 = message\_2 = ... = message\_n.
 
-        Verify-Aggregated(PK_1, ..., PK_n, message, signature) -> VALID or INVALID
+    Verify-Aggregated(PK_1, ..., PK_n, message, signature)
+        -> VALID or INVALID
 
 
 
@@ -342,35 +349,35 @@ Notation and primitives used:
   bilinear and non-degenerate.
 
 - Elliptic curve operations in E1 and E2 are written in additive notation, with P+Q
-  denoting point addition and x*P denoting scalar multiplication
+  denoting point addition and x \* P denoting scalar multiplication
   of a point P by a scalar x.
 
     TBD: [I-D.pairing-friendly-curves] uses the notation x[P].
 
-- Field operations in GT are written in multiplicative notation, with a*b denoting
+- Field operations in GT are written in multiplicative notation, with a \* b denoting
   field element multiplication.  
 
 - || - octet string concatenation
 
-- domain_separator - an identifier for the ciphersuite. In current draft "BLS12_381-SHA384-try_and_increment". Future identifiers MUST include
+- domain\_separator - an identifier for the ciphersuite. In current draft "BLS12\_381-SHA384-try\_and\_increment". Future identifiers MUST include
   an identifier of the curve, for example BLS12-381, an identifier of the hash function, for example SHA512, and the algorithm in use, for example, try-and-increment.
 
 Type conversions:
 
-- int_to_string(a, len) - conversion of nonnegative integer a to
+- int\_to\_string(a, len) - conversion of nonnegative integer a to
     octet string of length len.
 
-- string_to_int(a_string) - conversion of octet string a_string
+- string\_to\_int(a\_string) - conversion of octet string a\_string
     to nonnegative integer.
 
-- E1_to_string - conversion of  E1 point to octet string
+- E1\_to\_string - conversion of  E1 point to octet string
 
-- string_to_E1 - conversion of octet string to E1 point.
+- string\_to\_E1 - conversion of octet string to E1 point.
     Returns INVALID if the octet string does not convert to a valid E1 point.
 
 Hashing Algorithms
 
--    hash_to_G1 - cryptographic hashing of octet string to G1 element.
+-    hash\_to\_G1 - cryptographic hashing of octet string to G1 element.
     Must return a valid G1 element. Specified in Section {{auxiliary}}.
 
 <!---
@@ -380,67 +387,69 @@ Hashing Algorithms
 ##  Keygen: Key Generation
 
 
-      Output: PK, SK
+    Output: PK, SK
 
 1. SK = x, chosen as a random integer in the range 1 and r-1
-1. PK = x*P2
+1. PK = x \* P2
 1. Output PK, SK
 
 
 ##  Sign: Signature Generation
 
-      Input: SK = x, message       Output: signature
+    Input: SK = x, message
+    Output: signature
 
 1. Input a secret key SK = x and a message digest message
-1. H = hash_to_G1(suite_string, message)
-1. Gamma = x*H
-1. signature = E1_to_string(Gamma)
+1. H = hash\_to\_G1(suite\_string, message)
+1. Gamma = x \* H
+1. signature = E1\_to\_string(Gamma)
 1. Output signature
 
 
 ##  Verify: Signature Verification
 
-      Input: PK, message, signature    Output: "VALID" or "INVALID"
+    Input: PK, message, signature
+    Output: "VALID" or "INVALID"
 
-1.  H = hash_to_G1(suite_string, message)
-1.  Gamma = string_to_E1(signature)
+1.  H = hash\_to\_G1(suite\_string, message)
+1.  Gamma = string\_to\_E1(signature)
 1.  If Gamma is "INVALID", output "INVALID" and stop
-1.  If r*Gamma != 0, output "INVALID" and stop
+1.  If r \* Gamma != 0, output "INVALID" and stop
 1.  Compute c = pairing(Gamma, P2)
 1.  Compute c' = pairing(H, PK)
-1.  If c and c' are equal, output "VALID",
-       else output "INVALID"
+1.  If c and c' are equal, output "VALID", else output "INVALID"
 
 ## Aggregate
 The following algorithm works for both the same message aggregation and different
 message aggregation.
 
 
-      Input: (PK_1, signature_1), ..., (PK_n, signature_n)    Output: signature
+    Input: (PK_1, signature_1), ..., (PK_n, signature_n)
+    Output: signature
 
-1. Output signature = E1_to_string(string_to_E1(signature_1) + ... +
-string_to_E1(signature_n))
+1. Output signature = E1\_to\_string(string\_to\_E1(signature\_1) + ... +
+string\_to\_E1(signature\_n))
 
 ### Verify-Aggregated-1
 
-      Input: (PK_1, ..., PK_n), message, signature    Output: "VALID" or "INVALID"
+    Input: (PK_1, ..., PK_n), message, signature
+    Output: "VALID" or "INVALID"
 
-1.  PK' = PK_1 + ... + PK_n
+1.  PK' = PK\_1 + ... + PK\_n
 1.  Output Verify(PK', message, signature)
 
 ### Verify-Aggregated-n
 
-      Input: (PK_1, message_1), ..., (PK_n, message_n), signature    
-      Output: "VALID" or "INVALID"
+    Input: (PK_1, message_1), ..., (PK_n, message_n), signature    
+    Output: "VALID" or "INVALID"
 
-1.  H_i = hash_to_G1(suite_string, message_i)
-1.  Gamma = string_to_E1(signature)
+1.  H\_i = hash\_to\_G1(suite\_string, message\_i)
+1.  Gamma = string\_to\_E1(signature)
 1.  If Gamma is "INVALID", output "INVALID" and stop
-1.  If r*Gamma != 0, output "INVALID" and stop
+1.  If r \* Gamma != 0, output "INVALID" and stop
 1.  Compute c = pairing(Gamma, P2)
-1.  Compute c' = pairing(H_1, PK_1) * ... * pairing(H_n, PK_n)
-1.  If c and c' are equal, output "VALID",
-       else output "INVALID"
+1.  Compute c' = pairing(H\_1, PK\_1) \* ... \* pairing(H\_n, PK\_n)
+1.  If c and c' are equal, output "VALID", else output "INVALID"
 
 
 
@@ -455,7 +464,7 @@ substantial updates pending feedback from the community. We describe
 a generic approach for hashing, in order to cover hashing into
 curves defined over prime power extension fields, which are not covered in
 [I-D.irtf-cfrg-hash-to-curve]. We expect to support several different hashing
-algorithms specified via the suite_string.)
+algorithms specified via the suite\_string.)
 
 ### Preliminaries
 In all the pairing-friendly curves, E is defined over a field
@@ -468,12 +477,12 @@ x-coordinate in GP(p)^k plus a single bit to determine whether the point
 is (x,y) or (x,-y), thus requiring k log(p) + 1 bits [I-D.irtf-cfrg-hash-to-curve].
 
 Concretely, we encode a point (x,y) on E as a string comprising k substrings
-s_1, ..., s_k each of length log(p)+2 bits, where
+s\_1, ..., s\_k each of length log(p)+2 bits, where
 
-* the first bit of s_1 indicates whether E is the point at infinity
-* the second bit of s_1 indicates whether the point is (x,y) or (x,-y)
-* the first two bits of s_2, ..., s_k are 00
-* the x-coordinate is specified by the last log(p) bits of s_1, ..., s_k
+* the first bit of s\_1 indicates whether E is the point at infinity
+* the second bit of s\_1 indicates whether the point is (x,y) or (x,-y)
+* the first two bits of s\_2, ..., s\_k are 00
+* the x-coordinate is specified by the last log(p) bits of s\_1, ..., s\_k
 
 In fact, we will pad each substring with 0 bits so that the length of each substring
 is a multiple of 8 bits.
@@ -481,10 +490,10 @@ is a multiple of 8 bits.
 This section uses the following constants:
 
 * pbits: the number of bits to represent integers modulo p.
-* padded_pbits: the smallest multiple of 8 that is greater than pbits+2.
-* padlen: padded_pbits - padlen
+* padded\_pbits: the smallest multiple of 8 that is greater than pbits+2.
+* padlen: padded\_pbits - padlen
 
-| curve | pbits | padded_pbits | padlen |
+| curve | pbits | padded\_pbits | padlen |
 |-------|-------|--------------|--------|
 |BLS-381| 381   | 384          | 3      |
 
@@ -495,20 +504,20 @@ This section uses the following constants:
 TBA: A discussion on type conversions similar to https://tools.ietf.org/html/rfc7748#section-5; additional algorithms given in RFC 8032 sections 5.1.2 and 5.1.3.
 --->
 
-In general we view a string str as a vector of substrings s_1, ... s_k for k >= 1;
-each substring is of padded_pbits bits; and k is set properly according to the individual
+In general we view a string str as a vector of substrings s\_1, ... s\_k for k >= 1;
+each substring is of padded\_pbits bits; and k is set properly according to the individual
 curve.
 For example,  for BLS12-381 curve, k=1 for E1 and 2 for E2.
-If the input string is not a multiple of padded_pbits, we
+If the input string is not a multiple of padded\_pbits, we
 tail pad the string to meet the correct length.
 
 A string that encodes an E1/E2 point may have the following structure:
-* for the first substring s_1
+* for the first substring s\_1
     * the first bit indicates if the point is the point at infinity
-    * the second bit is either 0 or 1, denoted by y_bit
+    * the second bit is either 0 or 1, denoted by y\_bit
     * the third to padlen bits are 0
 
-* for the rest substrings s_2, ... s_k
+* for the rest substrings s\_2, ... s\_k
     * the first padlen bits are 0s
 
 TBD: some implementation uses an additional leading bit to indicate the
@@ -517,69 +526,59 @@ or in an uncompressed form (give both x and y coordinate).
 
 #### curve-to-string
 
-  Input:
-
-    input_string - a point P = (x, y) on the curve
-
-  Output:
-
-    a string of k * padded_pbits
+    Input: input_string - a point P = (x, y) on the curve
+    Output: a string of k \* padded_pbits
 
   Steps:
 
   1. If P is the point at infinity, output 0b1000...0
-  2. Parse y as y_1, ..., y_k; set y_bit as y_1 mod 2
-  2. Parse x as x_1, ..., x_k
-  3. set the substring s_1 =  0 | y_bit | padlen-2 of 0s | int_to_string(x_1)  
-  4. set substrings s_i = padlen of 0s | int_to_string(x_i)  for 2<=i<=k
-  5. Output the string s_1 | s_2 | ... | s_k
+  2. Parse y as y\_1, ..., y\_k; set y\_bit as y\_1 mod 2
+  2. Parse x as x\_1, ..., x\_k
+  3. set the substring s\_1 =  0 | y\_bit | padlen-2 of 0s | int\_to\_string(x\_1)  
+  4. set substrings s\_i = padlen of 0s | int\_to\_string(x\_i)  for 2<=i<=k
+  5. Output the string s\_1 | s\_2 | ... | s\_k
 
 
 #### string-to-curve
 
 The algorithm takes as follows:
 
-  Input:
-
-    input_string - a single octet string.
-
-  Output:
-
-    Either a point P on the curve, or INVALID
+    Input: input_string - a single octet string.
+    Output: Either a point P on the curve, or INVALID
 
   Steps:
 
-  1. If length(input_string) is < padded_pbits/8 bytes, lead pad input_string with 0s;
+  1. If length(input\_string) is < padded\_pbits/8 bytes, lead pad input\_string with 0s;
 
-  1. If length(input_string) is not a multiple of padded_pbits/8 bytes, tail pad with 0, ..., 0;
+  1. If length(input\_string) is not a multiple of padded\_pbits/8 bytes, tail pad with 0, ..., 0;
 
-  1. Parse input_string as a vector of substrings s_1, ..., s_k
+  1. Parse input\_string as a vector of substrings s\_1, ..., s\_k
 
-  3. b = s_1[0]; i.e., the first byte of the first substring;
+  3. b = s\_1[0]; i.e., the first byte of the first substring;
 
   4. If the first bit of b is 1, return P = 0 (the point at infinity)
 
-  5. Set y_bit to be the second bit of b and then set the second bit of b to 0
+  5. Set y\_bit to be the second bit of b and then set the second bit of b to 0
 
-  6. If the third to plen bits of input_string are not 0, return INVALID
+  6. If the third to plen bits of input\_string are not 0, return INVALID
 
-  6. Set x_1 = string_to_int(s_1)
-     1. if x_1 > p then return INVALID
+  6. Set x\_1 = string\_to\_int(s\_1)
+     1. if x\_1 > p then return INVALID
 
   7. for i in [2 ... k]
 
-      1. b = s_i[0]
+      1. b = s\_i[0]
       2. if top plen bits of b is not 0, return INVALID
-      3. set x_i = string_to_int(s_i)
-         1. if x_1 > p then return INVALID
-  8. Set x= (x_1, ..., x_k)    
+      3. set x\_i = string\_to\_int(s\_i)
+         1. if x\_1 > p then return INVALID
+  8. Set x= (x\_1, ..., x\_k)    
 
   7. solve for y so that (x, y) satisfies elliptic curve equation;
      * output INVALID if equation is not solvable with x
-     * parse y as (y_1, ..., y_k)   
-     * if solutions exist, there should be a pair of ys where y_1-s differ by parity
-     * set y to be the solution where y_1 is odd if y_bit = 1
-     * set y to be the solution where y_1 is even if y_bit = 0
+     * parse y as (y\_1, ..., y\_k)   
+     * if solutions exist, there should be a pair of ys where y\_1-s differ by parity
+     * set y to be the solution where y\_1 is odd if y\_bit = 1
+     * set y to be the solution where y\_1 is even if y\_bit = 0
   8. output P = (x, y) as a curve point.
 
 TBD: check the parity property remains true for E2. The Chia and Etherum implementations
@@ -587,7 +586,7 @@ use lexicographic ordering.
 
 ### Membership test
 
-The following g1_membership_test and g1_membership_test algorithms is to
+The following g1\_membership\_test and g1\_membership\_test algorithms is to
 check if a E1 or E2 point is in the correct prime subgroup. Example:
 
   r = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
@@ -596,7 +595,7 @@ for curve BLS12-381.
 
 
 
-  g1_membership_test(input_point)
+  g1\_membership\_test(input\_point)
 
   input:
 
@@ -609,11 +608,11 @@ for curve BLS12-381.
   Steps:
 
   1.  r = order of group G1
-  1.  if r * P  == 1 return "VALID", otherwise, return "INVALID"
+  1.  if r \* P  == 1 return "VALID", otherwise, return "INVALID"
 
 
 
-  g2_membership_test(input_point)
+  g2\_membership\_test(input\_point)
 
   input:
 
@@ -626,7 +625,7 @@ for curve BLS12-381.
   Steps:
 
   1.  r = order of group G2
-  1.  if r * P  == 1 return "VALID", otherwise, return "INVALID"
+  1.  if r \* P  == 1 return "VALID", otherwise, return "INVALID"
 
 
 
@@ -644,7 +643,7 @@ This can be achieved in one of three ways:
 * Proof of possession:     pk = ( u=g^sk,  H'(u)^sk ),    sig = H(m)^sk
 (see concrete mechanisms in [Ristenpart-Yilek 06])
 
-* Linear combination:    agg =  sig_1^t_1 ... sig_n^t_n
+* Linear combination:    agg =  sig\_1^t\_1 ... sig\_n^t\_n
 (see [Boneh-Drijvers-Neven 18b](https://eprint.iacr.org/2018/483.pdf);
 there, pre-processing public keys would speed up verification.)
 
@@ -653,8 +652,8 @@ Several existing implementations skip step 4 (membership in G1) in Verify.
 In this setting, the BLS signature remains unforgeable (but not strongly
 unforgeable) under a stronger assumption:
 
-given P1, a*P1, P2, b*P2, it is hard to compute U in E1 such that
-pairing(U,P2) = pairing(a*P1, b*P2).
+given P1, a \* P1, P2, b \* P2, it is hard to compute U in E1 such that
+pairing(U,P2) = pairing(a \* P1, b \* P2).
 
 ## Side channel attacks
 It is important to protect the secret key in implementations of the
@@ -667,8 +666,8 @@ the scalar.
 
 ## Randomness considerations
 BLS signatures are deterministic. This protects against attacks
-arising from signing with bad randomness, for example, the nounce reusing
-attack in ECDSA [HDWH 12].
+arising from signing with bad randomness, for example, the nonce reuse
+attack on ECDSA [HDWH 12].
 
 <!---
 For signing, we require variable-base exponentiation in G1 to be constant-time, and
@@ -683,6 +682,7 @@ co-factor is greater than 1.
 The security analysis models the hash function H as a random oracle,
 and it is crucial that we implement H using a cryptographically
 secure hash function.
+
 <!-- At the moment, hashing onto G1 is typically
 implemented by hashing into E1 and then multiplying by the cofactor;
 this needs to be taken into account in the security proof (namely, the
@@ -822,11 +822,11 @@ Consider the following game between an adversary and a challenger.
 The challenger generates a key-pair (PK, SK) and gives PK to the adversary.
 The adversary may repeatedly query the challenger on any message message to obtain
 its corresponding signature signature.
-Eventually the adversary outputs a sequence ((PK_1, message_1), ..., (PK_n, message_n), (PK, message), signature).
+Eventually the adversary outputs a sequence ((PK\_1, message\_1), ..., (PK\_n, message\_n), (PK, message), signature).
 
 Aggregation unforgeability means that no adversary can produce a sequence
 where it did not query the challenger on the message message, and
-Verify-Aggregated((PK_1, message_1), ..., (PK_n, message_n), (PK, message), signature) outputs VALID.
+Verify-Aggregated((PK\_1, message\_1), ..., (PK\_n, message\_n), (PK, message), signature) outputs VALID.
 
 We note that aggregation unforgeability implies message unforgeability.
 
@@ -836,8 +836,8 @@ TODO: We may also consider a strong aggregation unforgeability property.
 
 The BLS signature scheme achieves strong message unforgeability and aggregation
 unforgeability under the co-CDH
-assumption, namely that given P1, a*P1, P2, b*P2, it is hard to
-compute {ab}*P1. [BLS01, BGLS03]
+assumption, namely that given P1, a \* P1, P2, b \* P2, it is hard to
+compute {ab} \* P1. [BLS01, BGLS03]
 
 
 # Appendix C. Reference
