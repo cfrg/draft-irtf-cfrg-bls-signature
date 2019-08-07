@@ -728,7 +728,9 @@ Chia uses the Fouque-Tibouchi hashing to the curve, which can be done in constan
 This document does not make any requests of IANA.
 --->
 
-# Appendix A. Test Vectors
+{backmatter}
+
+# Test Vectors
 
 
 TBA: (i) test vectors for both variants of the signature scheme
@@ -792,7 +794,7 @@ following:
 The verification algorithm should return true for the testing vectors in this section.
 --->
 
-# Appendix B. Security
+# Security
 
 ## Definitions
 ### Message Unforgeability
@@ -840,7 +842,7 @@ assumption, namely that given P1, a \* P1, P2, b \* P2, it is hard to
 compute {ab} \* P1. [BLS01, BGLS03]
 
 
-# Appendix C. Reference
+# References
 
 [BLS 01] Dan Boneh, Ben Lynn, Hovav Shacham:
 Short Signatures from the Weil Pairing. ASIACRYPT 2001: 514-532.
