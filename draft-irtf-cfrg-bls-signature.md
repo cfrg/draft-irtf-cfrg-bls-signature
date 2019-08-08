@@ -208,7 +208,12 @@ The following notation and primitives are used:
 
 * For each of E1 and E2 defined by the above pairing-friendly curve,
   we assume that the pairing-friendly elliptic curve definition provides
-  the following primitives:
+  several primitives, described below.
+
+    Note that these primitives are named generically.
+    When referring to one of these primitives for a specific group,
+    this document appends the name of the group, e.g.,
+    point\_to\_octets\_E1, subgroup\_check\_E2, etc.
 
   - point\_to\_octets(P) -> ostr: returns the canonical representation of
     the point P as an octet string.
@@ -281,22 +286,21 @@ document are to be interpreted as described in [@!RFC2119].
 This section defines core operations used by the schemes defined in (#schemes).
 These operations MUST NOT be used except as described in that section.
 
-Instantiating these operations requires a pairing-friendly elliptic curve
-and associated functionality given in (#definitions).
+## Variants {#corevariants}
 
 Each core operation has two variants that trade off signature
 and public key size:
 
-1. Minimizing signature size: signatures are points in G1,
+1. Minimal-signature-size: signatures are points in G1,
    public keys are points in G2.
    (Recall from (#definitions) that E1 has a more compact representation than E2.)
 
-2. Minimizing public key size: public keys are points in G1,
+2. Minimal-pubkey-size: public keys are points in G1,
    signatures are points in G2.
 
     Implementations using signature aggregation SHOULD use this approach,
-    since the cost of communicating (PK\_1, ..., PK\_n, signature) is
-    dominated by the size of public keys even for small n.
+    since the size of (PK\_1, ..., PK\_n, signature) is dominated by
+    the public keys even for small n.
 
 <!--
     For instance, when instantiated with the pairing-friendly curve
@@ -304,34 +308,102 @@ and public key size:
     For comparison, an EdDSA signature over curve25519 is 64 bytes [RFC8032].
 -->
 
+## Parameters {#coreparams}
+
+The core operations in this section depend on several parameters:
+
+- A signature variant, either minimal-signature-size or minimal-pubkey-size.
+  These are defined in (#corevariants).
+
+- A pairing-friendly elliptic curve, plus associated functionality
+  given in (#definitions).
+
+- H, a hash function H that MUST be a secure cryptographic hash function,
+  e.g., SHA-256 [FIPS180-4].
+  H MUST output at least ceil(log2(r)) bits, where r is the order of the
+  subgroups G1 and G2 defined by the pairing-friendly elliptic curve.
+
+- hash\_to\_point, a function whose interface is described in (#definitions).
+  When instantiating the variant with minimal signature size, this function
+  MUST output a point in G1.
+  When instantiating the variant with minimal public key size, this function
+  MUST output a point in G2.
+  For security, this function SHOULD be either a random oracle encoding or a
+  nonuniform encoding, as defined in [I-D.hash-to-curve].
+
+In addition, the following primitives are determined by the above parameters:
+
+- P, an elliptic curve point.
+  When the signature variant is minimal-signature-size, P is the
+  distinguished point P2 that generates the group G2 (see (#definitions)).
+  When the signature variant is minimal-pubkey-size, P is the
+  distinguished point P1 that generates the group G1.
+
+- r, the order of the subgroups G1 and G2 defined by the pairing-friendly curve.
+
+- pairing, a function that invokes the function e of (#definitions),
+  with argument order depending on signature variant:
+
+  - For minimal-signature-size:
+
+        pairing(U, V) := e(U, V)
+
+  - For minimal-pubkey-size:
+
+        pairing(U, V) := e(V, U)
+
+- point\_to\_pubkey and point\_to\_signature, functions that invoke the
+  appropriate serialization routine ((#definitions)) depending on
+  signature variant:
+
+  - For minimal-signature-size:
+
+        point\_to\_pubkey(P) := point\_to\_octets\_E2(P)
+
+        point\_to\_signature(P) := point\_to\_octets\_E1(P)
+
+  - For minimal-pubkey-size:
+
+        point\_to\_pubkey(P) := point\_to\_octets\_E1(P)
+
+        point\_to\_signature(P) := point\_to\_octets\_E2(P)
+
+- pubkey\_to\_point and signature\_to\_point, functions that invoke the
+  appropriate deserialization routine ((#definitions)) depending on
+  signature variant:
+
+  - For minimal-signature-size:
+
+        pubkey\_to\_point(ostr) := octets\_to\_point\_E2(ostr)
+
+        signature\_to\_point(ostr) := octets\_to\_point\_E1(ostr)
+
+  - For minimal-pubkey-size:
+
+        pubkey\_to\_point(ostr) := octets\_to\_point\_E1(ostr)
+
+        signature\_to\_point(ostr) := octets\_to\_point\_E2(ostr)
+
+- pubkey\_subgroup\_check and signature\_subgroup\_check, functions
+  that invoke the appropriate subgroup check routine ((#definitions))
+  depending on signature variant:
+
+  - For minimal-signature-size:
+
+        pubkey\_subgroup\_check(ostr) := subgroup\_check\_E2(ostr)
+
+        signature\_subgroup\_check(ostr) := subgroup\_check\_E1(ostr)
+
+  - For minimal-pubkey-size:
+
+        pubkey\_subgroup\_check(ostr) := subgroup\_check\_E1(ostr)
+
+        signature\_subgroup\_check(ostr) := subgroup\_check\_E2(ostr)
+
 ##  KeyGen {#keygen}
 
 The KeyGen algorithm generates a pair (PK, SK) deterministically using
 the secret octet string IKM.
-
-KeyGen takes the following parameters:
-
-- P, an elliptic curve point.
-  When instantiating KeyGen for minimal signature size, P MUST be the
-  distinguished point P2 that generates the group G2 (see (#definitions)).
-  When instantiating KeyGen for minimal public key size, P MUST be the
-  distinguished point P1 that generates the group G1.
-
-- r, the order of the subgroup generated by the point P.
-
-- H, a hash function H that MUST be a secure cryptographic hash function,
-  e.g., SHA-256 [FIPS180-4], and MUST output at least ceil(log2(r)) bits.
-
-- point\_to\_pubkey, a function that invokes the appropriate serialization
-  routine ((#definitions)) depending on which signature variant is in use.
-
-  - When instantiating KeyGen for minimal signature size,
-
-        point\_to\_pubkey(P) := point\_to\_octets\_G2(P)
-
-  - When instantiating KeyGen for minimal public key size,
-
-        point\_to\_pubkey(P) := point\_to\_octets\_G1(P)
 
 KeyGen uses HKDF [@!RFC5869] instantiated with the hash function H.
 
@@ -354,8 +426,8 @@ Outputs:
 - SK, the corresponding secret key, an integer 0 <= SK < r.
 
 Definitions:
-- HKDF-Extract is as described in RFC5869, instantiated with hash H.
-- HKDF-Expand is as described in RFC5869, instantiated with hash H.
+- HKDF-Extract is as defined in RFC5869, instantiated with hash H.
+- HKDF-Expand is as defined in RFC5869, instantiated with hash H.
 - L is the integer given by ceil((1.5 * ceil(log2(r))) / 8).
 - "BLS-SIG-KEYGEN-SALT-" is an ASCII string comprising 20 octets.
 - "" is the empty string.
@@ -374,27 +446,6 @@ Procedure:
 
 The CoreSign algorithm computes a signature from SK, a secret key,
 and message, an octet string.
-
-CoreSign takes the following parameter:
-
-- hash\_to\_point, a function whose interface is described in (#definitions).
-  When instantiating CoreSign for minimal signature size, this function MUST
-  output a point in G1.
-  When instantiating CoreSign for minimal public key size, this function MUST
-  output a point in G2.
-  For security, this function SHOULD be either a random oracle encoding or a
-  nonuniform encoding, as defined in [I-D.hash-to-curve].
-
-- point\_to\_signature, a function that invokes the appropriate serialization
-  routine ((#definitions)) depending on which signature variant is in use.
-
-  - When instantiating KeyGen for minimal signature size,
-
-        point\_to\_signature(P) := point\_to\_octets\_G1(P)
-
-  - When instantiating KeyGen for minimal public key size,
-
-        point\_to\_signature(P) := point\_to\_octets\_G2(P)
 
 ~~~
 signature = CoreSign(SK, message)
@@ -418,39 +469,6 @@ Procedure:
 The CoreVerify algorithm checks that a signature is valid for one
 or more (message, PK) pairs.
 
-CoreVerify takes the following parameters.
-
-- P, an elliptic curve point as defined in (#keygen).
-
-- hash\_to\_point, as described in (#coresign).
-
-- pairing, a function that invokes the function e of (#definitions),
-  with argument order depending on which signature variant is in use.
-
-  - When instantiating CoreVerify for minimal signature size,
-
-        pairing(U, V) := e(U, V)
-
-  - When instantiating CoreVerify for minimal public key size,
-
-        pairing(U, V) := e(V, U)
-
-- signature\_to\_point and pubkey\_to\_point, functions that invokes the
-  appropriate deserialization routine ((#definitions)) depending on which
-  signature variant is in use:
-
-  - When instantiating CoreVerify for minimal signature size,
-
-        signature\_to\_point(ostr) := octets\_to\_point\_G1(ostr)
-
-        pubkey\_to\_point(ostr) := octets\_to\_point\_G2(ostr)
-
-  - When instantiating CoreVerify for minimal public key size,
-
-        signature\_to\_point(ostr) := octets\_to\_point\_G2(ostr)
-
-        pubkey\_to\_point(ostr) := octets\_to\_point\_G1(ostr)
-
 ~~~
 result = CoreVerify(PK, message, signature)
 
@@ -467,8 +485,8 @@ Procedure:
 2. xP = pubkey_to_point(PK)
 3. If R is INVALID, return INVALID
 4. If xP is INVALID, return INVALID
-5. If subgroup_check(R) is INVALID, return INVALID
-6. If subgroup_check(xP) is INVALID, return INVALID
+5. If signature_subgroup_check(R) is INVALID, return INVALID
+6. If pubkey_subgroup_check(xP) is INVALID, return INVALID
 7. Q = hash_to_point(message)
 8. C1 = e(R, P)
 9. C2 = e(Q, xP)
@@ -478,12 +496,6 @@ Procedure:
 ## Aggregate
 
 The Aggregate algorithm compresses multiple signatures into one.
-
-Aggregate takes the following parameter:
-
-- point\_to\_signature, as described in (#coresign).
-
-- signature\_to\_point, as described in (#coreverify).
 
 ~~~
 signature = Aggregate(signature_1, ..., signature_n)
