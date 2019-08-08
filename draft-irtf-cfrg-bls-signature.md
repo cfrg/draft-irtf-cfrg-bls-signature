@@ -357,10 +357,11 @@ Definitions:
 - HKDF-Extract is as described in RFC5869, instantiated with hash H.
 - HKDF-Expand is as described in RFC5869, instantiated with hash H.
 - L is the integer given by ceil((1.5 * ceil(log2(r))) / 8).
-- "" denotes the empty string.
+- "BLS-SIG-KEYGEN-SALT-" is an ASCII string comprising 20 octets.
+- "" is the empty string.
 
 Procedure:
-1. PRK = HKDF-Extract("", IKM)
+1. PRK = HKDF-Extract("BLS-SIG-KEYGEN-SALT-", IKM)
 2. OKM = HKDF-Expand(PRK, "", L)
 3. x = OS2IP(OKM) mod r
 4. xP = x * P
