@@ -832,69 +832,69 @@ Procedure:
 
 ## Validating public keys {#pubkeyvalid}
 
-When users register a public key, we should ensure that it is well-formed.
-This requires a G2 membership test. In applications where we use aggregation,
-we need to enforce security against rogue key attacks [Boneh-Drijvers-Neven 18a](https://crypto.stanford.edu/~dabo/pubs/papers/BLSmultisig.html).
-This can be achieved in one of three ways:
+All algorithms in (#coreops) and (#schemes) that operate on public keys
+require first validating these keys.
+For the basic and message augmentation schemes, the use of KeyValidate
+is REQUIRED.
+For the proof of possession scheme, each public key MUST be accompanied by
+a proof of possession, and use of PopVerify is REQUIRED.
 
-* Message augmentation:    pk = g^sk,   sig = H(pk, m)^sk
-(BGLS, [Bellare-Namprempre-Neven 07](https://eprint.iacr.org/2006/285)).
-
-* Proof of possession:     pk = ( u=g^sk,  H'(u)^sk ),    sig = H(m)^sk
-(see concrete mechanisms in [Ristenpart-Yilek 06])
-
-* Linear combination:    agg =  sig\_1^t\_1 ... sig\_n^t\_n
-(see [Boneh-Drijvers-Neven 18b](https://eprint.iacr.org/2018/483.pdf);
-there, pre-processing public keys would speed up verification.)
+Note that implementations MAY cache validation results for public keys
+in order to avoid unnecessarily repeating validation for known keys.
 
 ## Skipping membership check
-Several existing implementations skip steps 5-6 (membership in G1) in CoreVerify ((#coreverify)).
-In this setting, the BLS signature remains unforgeable (but not strongly
-unforgeable) under a stronger assumption:
 
-given P1, a \* P1, P2, b \* P2, it is hard to compute U in E1 such that
-pairing(U,P2) = pairing(a \* P1, b \* P2).
+Some existing implementations skip the signature\_subgroup\_check invocation
+in CoreVerify ((#coreverify)), whose purpose is ensuring that the signature
+is an element of a prime-order subgroup.
+This check is REQUIRED of conforming implementations, for two reasons.
+
+1. For most pairing-friendly elliptic curves used in practice, the pairing
+   operation e ((#definitions)) is undefined when its input points are not
+   in the prime-order subgroups of E1 and E2.
+   The resulting behavior is unpredictable, and may enable forgeries.
+
+2. Even if the pairing operation behaves properly on inputs that are outside
+   the correct subgroups, skipping the subgroup check breaks the strong
+   unforgeability property.
 
 ## Side channel attacks
-It is important to protect the secret key in implementations of the
-signing algorithm. We can protect against some side-channel attacks by
-ensuring that the implementation executes exactly the same sequence of
+
+Implementations of the signing algorithm SHOULD protect the secret key
+from side-channel attacks.
+One method for protecting against certain side-channel attacks is ensuring
+that the implementation executes exactly the same sequence of
 instructions and performs exactly the same memory accesses, for any
-value of the secret key. To achieve this, we require that
- point multiplication in G1 should run in constant time with respect to
-the scalar.
+value of the secret key.
+In other words, implementations on the underlying pairing-friendly elliptic
+curve SHOULD run in constant time.
 
 ## Randomness considerations
+
 BLS signatures are deterministic. This protects against attacks
 arising from signing with bad randomness, for example, the nonce reuse
 attack on ECDSA [HDWH 12].
 
-<!---
-For signing, we require variable-base exponentiation in G1 to be constant-time, and
-for key generation, we require fixed-base exponentiation in G2 to be constant-time.
+As discussed in (#keygen), the IKM input to KeyGen MUST be infeasible
+to guess and MUST be kept secret.
+One possibility is to generate IKM from a trusted source of randonmess.
+Guidelines on constructing such a source are outside the scope of this
+document.
 
-#### Strong unforgeability.
-Only variant 1 is strongly unforgeable; the basic variant and variant 2 are not if the
-co-factor is greater than 1.
---->
+## Implementing hash\_to\_point
 
-## Implementing the hash function
-The security analysis models the hash function H as a random oracle,
-and it is crucial that we implement H using a cryptographically
+The security analysis models hash\_to\_point as a random oracle.
+It is crucial that H is implemented using a cryptographically
 secure hash function.
-
-<!-- At the moment, hashing onto G1 is typically
-implemented by hashing into E1 and then multiplying by the cofactor;
-this needs to be taken into account in the security proof (namely, the
-reduction needs to simulate the corresponding E1 element).-->
-
+For this purpose, implementations MUST meet the requirements of
+[I-D.hash-to-curve].
 
 # Implementation Status
 
 This section will be removed in the final version of the draft.
 There are currently several implementations of BLS signatures using the BLS12-381 curve.
 
-* Algorand: TBA
+* Algorand: [bls\_sigs\_ref](https://github.com/kwantam/bls_sigs_ref)
 
 * Chia: [spec](https://github.com/Chia-Network/bls-signatures/blob/master/SPEC.md)
 [python/C++](https://github.com/Chia-Network/bls-signatures). Here, they are
@@ -915,9 +915,7 @@ Chia uses the Fouque-Tibouchi hashing to the curve, which can be done in constan
 
 * Identity-Based Cryptography Standard [rfc5901](https://tools.ietf.org/html/rfc5091).
 
-* Hashing to Elliptic Curves [draft-irtf-cfrg-hash-to-curve-02](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-02), in order to implement the hash function H. The current draft does not cover pairing-friendly curves, where we need to handle curves over prime power extension fields GF(p^k).
-
-* Verifiable random functions [draft-irtf-cfrg-vrf-03](https://tools.ietf.org/html/draft-irtf-cfrg-vrf-03). Section 5.4.1 also discusses instantiations for H.
+* Hashing to Elliptic Curves [draft-irtf-cfrg-hash-to-curve-04](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-02), in order to implement the hash function hash\_to\_point.
 
 * EdDSA [rfc8032](https://tools.ietf.org/html/rfc8032)
 
