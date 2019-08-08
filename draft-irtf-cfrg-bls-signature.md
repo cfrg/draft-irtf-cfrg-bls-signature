@@ -68,8 +68,8 @@ organization="Algorand"
 BLS is a digital signature scheme with compression properties.
 With a given set of signatures (signature\_1, ..., signature\_n) anyone can produce
 a compressed signature signature\_compressed. The same is true for a set of
-private keys or public keys, while keeping the connection between sets
-(a compressed public key is associated to its compressed public key).
+secret keys or public keys, while keeping the connection between sets
+(i.e., a compressed public key is associated to its compressed secret key).
 Furthermore, the BLS signature scheme is deterministic, non-malleable,
 and efficient. Its simplicity and cryptographic properties allows it
 to be useful in a variety of use-cases, specifically when minimal
@@ -96,9 +96,8 @@ signature and the aggregation algorithms.
 # Introduction
 
 A signature scheme is a fundamental cryptographic primitive
-used on the Internet and beyond that is used to protect authenticity and
- integrity of communication.
-Only holder of the secret key can sign messages, but anyone can
+that is used to protect authenticity and integrity of communication.
+Only the holder of a secret key can sign messages, but anyone can
 verify the signature using the associated public key.
 
 Signature schemes are used in point-to-point secure communication
@@ -166,11 +165,26 @@ In addition, the BLS signature scheme is also integrated into major blockchain
 projects such as Algorand, Chia, Dfinity, Ethereum.
 --->
 
-## Terminology
+## Organization of this document
+
+This document is organized as follows:
+
+- The remainder of this section defines terminology and the high-level API.
+
+- (#coreops) defines primitive operations used in the BLS signature scheme.
+  These operations MUST NOT be used alone.
+
+- (#schemes) defines three variants of the BLS Signature scheme.
+
+- (#ciphersuites) gives recommended ciphersuites.
+
+- The appendices give test vectors, etc.
+
+## Terminology and definitions {#definitions}
 
 The following terminology is used through this document:
 
-* SK:  The private key for the signature scheme.
+* SK:  The secret key for the signature scheme.
 
 * PK:  The public key for the signature scheme.
 
@@ -178,12 +192,19 @@ The following terminology is used through this document:
 
 * signature:  The digital signature output.
 
-* compression:  Given a list of signatures for a list of messages and public keys,
-generate a new signature that authenticates the same list of messages and public keys.
+* aggregation:  Given a list of signatures for a list of messages and public keys,
+an aggregation algorithm generates one signature that authenticates the same
+list of messages and public keys.
+
+* rogue key attack:
+  An attack in which a specially crafted public key (the "rogue" key) is used
+  to forge an aggregated signature.
+  This document specifies two methods for securing against rogue key attacks.
+  These schemes are defined in (#schemes).
 
 <!---
 * Signer:  The Signer generates a pair (SK, PK), publishes
-   PK for everyone to see, but keeps the private key SK.
+   PK for everyone to see, but keeps the secret key SK.
 
 * Verifier:  The Verifier holds a public key PK. It receives (message, signature)
    that it wishes to verify.
@@ -191,92 +212,156 @@ generate a new signature that authenticates the same list of messages and public
 * Aggregator: The Aggregator receives a collection of signatures (signature\_1, ..., signature\_n) that it wishes to compress into a short signature.
 --->
 
-## Signature Scheme Algorithms and Properties
+The following notation and primitives are used:
 
-Like most signature schemes,
-BLS comes with the following API:
+* a || b denotes the concatenation of octet strings a and b.
 
-* a key generation algorithm that generates a public
-  key PK and a private key SK
+* A pairing-friendly elliptic curve defines the following primitives
+  (see [I-D.pairing-friendly-curves] for detailed discussion):
 
-    KeyGen() -> PK, SK
+  - E1, E2: elliptic curve groups defined over finite fields.
+    This document assumes that E1 has a more compact representation than
+    E2, i.e., because E1 is defined over a smaller field than E2.
 
-* a signing algorithm that generates a deterministic signature for a message and a
-secret key
+  - G1, G2: subgroups of E1 and E2 (respectively) having prime order r.
 
-    Sign(SK, message) -> signature
+  - P1, P2: distinguished points that generate of G1 and G2, respectively.
 
-<!---
-   The Signer, given an input message, uses the private key SK to
+  - GT: a subgroup, of prime order r, of the multiplicative group of a field extension.
+
+  - e : G1 x G2 -> GT: a non-degenerate bilinear map.
+
+* For the above pairing-friendly curve, this document
+  writes operations in E1 and E2 in additive notation, i.e.,
+  P + Q denotes point addition and x \* P denotes scalar multiplication.
+  Operations in GT are written in multiplicative notation, i.e., a \* b
+  is field multiplication.
+
+<!-- ISSUE(RSW): pairing-friendly curves uses x[P] for multiplication? -->
+
+* For each of E1 and E2 defined by the above pairing-friendly curve,
+  we assume that the pairing-friendly elliptic curve definition provides
+  the following primitives:
+
+  - point\_to\_octets(P) -> ostr: returns the canonical representation of
+    the point P as an octet string.
+    This operation is also known as serialization.
+
+  - octets\_to\_point(ostr) -> P: returns the point P corresponding to the
+    canonical representation ostr, or INVALID if ostr is not a valid output
+    of point\_to\_octets.
+    This operation is also known as deserialization.
+
+  - subgroup\_check(P) -> VALID or INVALID: returns VALID when the point P
+    is an element of the subgroup of order r, and INVALID otherwise.
+    This function can always be implemented by checking that r \* P is equal
+    to the identity element. In some cases, faster checks may also exist,
+    e.g., [Bowe19].
+
+<!--
+* I2OSP and OS2IP are the functions defined in [RFC3447, Section 4].
+-->
+
+* hash\_to\_point(ostr) -> P: a cryptographic hash function that takes as input an
+  arbitrary octet string and returns a point on an elliptic curve.
+  Functions of this kind are defined in [I-D.hash-to-curve].
+  Each of the ciphersuites in (#ciphersuites) specifies the hash\_to\_point
+  algorithm to be used.
+
+## API
+
+The BLS signature scheme defines the following API:
+
+* KeyGen() -> PK, SK: a key generation algorithm that outputs a public key PK
+  and corresponding secret key SK.
+
+
+* Sign(SK, message) -> signature: a signing algorithm that generates a
+  deterministic signature given a secret key SK and a message.
+
+
+<!--
+   The Signer, given an input message, uses the secret key SK to
    obtain and output a signature.
 
     signature = Sign(SK, message)
 
    The BLS signing algorithm is deterministic.
 
-<!----
    may be deterministic or randomized, depending
    on the scheme. Looking ahead, BLS instantiates a deterministic signing algorithm.
----->
---->
+-->
 
-* a verification algorithm that outputs VALID if signature is a valid signature of message, and INVALID otherwise.
+* Verify(PK, message, signature) -> VALID or INVALID: 
+  a verification algorithm that outputs VALID if signature is a valid
+  signature of message under public key PK, and INVALID otherwise.
 
-<!---
+
+<!--
    The signature allows a verifier holding the public key PK to verify
    that signature is indeed produced by the signer holding the associated secret key.   Thus, the digital scheme also comes with an algorithm
---->
+-->
 
-    Verify(PK, message, signature) -> VALID or INVALID
-
-<!---
+<!--
    that outputs VALID if signature is a valid signature of message, and INVALID otherwise.
---->
+-->
 
-   We require that SK, PK, signature and message are octet strings.
+<!--
+We require that SK, PK, signature and message are octet strings.
 
 ### Aggregation
+-->
 
-  An aggregatable signature scheme includes an algorithm that allows to compress a
-  collection of signatures into a short signature.
+* Aggregate(signature\_1, ..., signature\_n) -> signature:
+  an aggregation algorithm that compresses a collection of signatures
+  into a single signature.
 
-    Aggregate((PK_1, signature_1), ..., (PK_n, signature_n)) -> signature
-
+<!--
   Note that the aggregator does not need to know the messages corresponding to individual
   signatures.
 
   The scheme also includes an algorithm to verify an aggregated signature, given a collection
   of corresponding public keys, the aggregated signature, and one or more messages.
+-->
 
-    Verify-Aggregated((PK_1, message_1), ..., (PK_n, message_n), signature)
-        -> VALID or INVALID
+* AggregateVerify((PK\_1, message\_1), ..., (PK\_n, message\_n), signature) -> VALID or INVALID:
+  an aggregate verification algorithm that outputs VALID if signature
+  is a valid aggregated signature for a collection of public keys and messages,
+  and outputs INVALID otherwise.
 
+<!--
   that outputs VALID if signature is a valid aggregated signature of messages message\_1, ..., message\_n, and
   INVALID otherwise.
+-->
 
+<!--
+* AggregateVerifyOM(PK\_1, ..., PK\_n, message, signature) -> VALID or INVALID:
+  an aggregate verification algorithm that outputs
+  VALID if signature is a valid aggregated signature for a collection of public keys all
+  signing the same message, and outputs INVALID otherwise.
+  This method is optional; if not available, AggregateVerify SHOULD be used instead.
+-->
+
+<!--
   The verification algorithm may also accept a simpler interface that allows
   to verify an aggregate signature of the same message. That is, message\_1 = message\_2 = ... = message\_n.
-
-    Verify-Aggregated(PK_1, ..., PK_n, message, signature)
-        -> VALID or INVALID
-
-
-
+-->
 
 ## Dependencies
 
-This draft has the following dependencies:
+This draft depends on the following documents:
 
+* [I-D.hash-to-curve] gives methods to hash from octet strings to group elements.
 
-* it relies on the [I-D.irtf-cfrg-hash-to-curve]
-for methods to convert binary strings
-into group elements
-* it relies on [I-D.pairing-friendly-curves] for pairings
-and related operations.
+* [I-D.pairing-friendly-curves] defines pairing-friendly elliptic curves and related operations.
 
-# BLS Signature
+# Core operations {#coreops}
 
-BLS signatures require pairing-friendly curves
+This section defines core operations used by the schemes defined in (#schemes).
+Instantiating these operations requires a pairing-friendly elliptic curve
+and associated functionality given in (#definitions).
+
+<!--
 given by e : G1 x G2 -> GT, where G1, G2 are prime-order
 subgroups of elliptic curve groups E1, E2.
 This draft suggests to use curve BLS12-381 as
@@ -285,22 +370,36 @@ Support of other curves SHALL be defined in
 extensions or future versions of this draft, or in
  separate
 documents.
+-->
 
-There are two variants of the scheme:
+Each core operation has two variants:
 
-1. (minimizing signature size) Use G1 to host data types of signatures
-and G2 for public keys, where G1/E1 has the more compact representation.
-For instance, when instantiated with the pairing-friendly curve
-BLS12-381, this yields signature size of 48 bytes, whereas
-the ECDSA signature over curve25519 has a signature size of
-64 byes.
+1. Minimizing signature size: signatures are points in G1,
+   public keys are points in G2.
+   (Recall from (#definitions) that E1 has a more compact representation than E2.)
 
-2. (minimizing public key size) Use G1 to host data types of public keys and
+2. Minimizing public key size: public keys are points in G1,
+   signatures are points in G2.
+
+    Implementations using signature aggregation SHOULD use this approach,
+    since the cost of communicating (PK\_1, ..., PK\_n, signature) is
+    dominated by the size of public keys even for small n.
+
+
+<!--
+    For instance, when instantiated with the pairing-friendly curve
+    BLS12-381 [I-D.pairing-friendly-curves], this yields a 48-byte signature.
+    For comparison, an EdDSA signature over curve25519 is 64 bytes [RFC8032].
+-->
+
+<!--
+Use G1 to host data types of public keys and
 G2 for signatures. This latter case comes up when we do signature aggregation,
 where most of the communication costs come from public keys. This
 is particularly relevant in applications such as blockchains
 and compressing certificate chains, where the goal is to minimize
 the total size of multiple public keys and aggregated signatures.
+-->
 
 The rest of the write-up assumes the first variant.
 It is straightforward to obtain algorithms for the
@@ -308,7 +407,7 @@ second variant from those of the first variant where we simply
 swap G1,E1 with G2,E2 respectively.
 
 
-<!---
+<!--
 #### Pairing (copied from the NTT draft)
 
    Pairing is a kind of the bilinear map defined over an elliptic curve.
@@ -331,8 +430,9 @@ swap G1,E1 with G2,E2 respectively.
 
    (3)  Computability: for any S in G_1, for any T in G_2, the bilinear
         map is efficiently computable.
---->
+-->
 
+<!--
 ## Preliminaries
 
 Notation and primitives used:
@@ -378,11 +478,10 @@ Type conversions:
 Hashing Algorithms
 
 -    hash\_to\_G1 - cryptographic hashing of octet string to G1 element.
-    Must return a valid G1 element. Specified in Section {{auxiliary}}.
+    Must return a valid G1 element. Specified in (#auxiliary).
 
-<!---
   hash_to_Zr(a_1, ..., a_n) - a hashing algorithm that given a vector of size n of G2 elements outputs a vector of size n of integers in the range 1 and r-1.
---->
+-->
 
 ##  Keygen: Key Generation
 
@@ -627,6 +726,10 @@ for curve BLS12-381.
   1.  r = order of group G2
   1.  if r \* P  == 1 return "VALID", otherwise, return "INVALID"
 
+
+# BLS Signatures {#schemes}
+
+# Ciphersuites {#ciphersuites}
 
 
 # Security Considerations
