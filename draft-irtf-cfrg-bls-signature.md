@@ -176,8 +176,7 @@ list of messages and public keys.
 * rogue key attack:
   An attack in which a specially crafted public key (the "rogue" key) is used
   to forge an aggregated signature.
-  This document specifies two methods for securing against rogue key attacks.
-  These schemes are defined in (#schemes).
+  (#schemes) specifies methods for securing against rogue key attacks.
 
 
 The following notation and primitives are used:
@@ -352,7 +351,7 @@ Inputs:
 
 Outputs:
 - PK, a public key encoded as an octet string.
-- SK, the corresponding secret key, an integer 0 < SK < r.
+- SK, the corresponding secret key, an integer 0 <= SK < r.
 
 Definitions:
 - HKDF-Extract is as described in RFC5869, instantiated with hash H.
@@ -492,7 +491,7 @@ Inputs:
 - signature_1, ..., signature_n, signatures output by CoreSign.
 
 Outputs:
-- signature, a compressed signature that combines all inputs.
+- signature, a compressed signature combining all inputs, or INVALID
 
 Procedure:
 1. accum = signature_to_point(signature_1)
@@ -530,7 +529,7 @@ This can be achieved in one of three ways:
 there, pre-processing public keys would speed up verification.)
 
 ## Skipping membership check
-Several existing implementations skip step 4 (membership in G1) in Verify.
+Several existing implementations skip steps 5-6 (membership in G1) in CoreVerify ((#coreverify)).
 In this setting, the BLS signature remains unforgeable (but not strongly
 unforgeable) under a stronger assumption:
 
