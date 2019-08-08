@@ -827,6 +827,134 @@ Procedure:
 
 # Ciphersuites {#ciphersuites}
 
+This section defines the format for a BLS ciphersuite.
+It also gives concrete ciphersuites based on the BLS12-381 pairing-friendly
+elliptic curve [I-D.pairing-friendly-curves].
+
+A ciphersuite specifies all parameters from (#coreparams),
+a scheme from (#schemes), and any parameters that scheme requires.
+In particular, a ciphersuite comprises:
+
+- SC: the scheme, either basic, message-augmentation, or proof-of-possession.
+
+- SV: the signature variant, either minimal-signature-size or
+  minimal-pubkey-size.
+
+- EC: a pairing-friendly elliptic curve, plus all associated functionality
+  ((#definitions)).
+
+- H: a cryptographic hash function.
+
+- hash\_to\_point: a hash from arbitrary strings to elliptic curve points.
+
+- hash\_pubkey\_to\_point (only specified when SC is proof-of-possession):
+  a hash from serialized public keys to elliptic curve points.
+
+## Basic ciphersuites
+
+The ciphersuite
+BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_NUL\_
+uses the following parameters, in addition to the common parameters below.
+
+- SV: minimal-signature-size
+
+- hash\_to\_point: the suite BLS12381G1-SHA256-SSWU-RO- defined in
+  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+
+    BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_NUL\_
+
+The ciphersuite
+BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_NUL\_
+uses the following parameters, in addition to the common parameters below.
+
+- SV: minimal-pubkey-size
+
+- hash\_to\_point: the suite BLS12381G2-SHA256-SSWU-RO- defined in
+  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+
+    BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_NUL\_
+
+The above ciphersuites share the following common parameters:
+
+- SC: basic
+
+- EC: BLS12-381, as defined in (#bls12381def).
+
+- H: SHA-256
+
+## Message augmentation ciphersuites
+
+The ciphersuite
+BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_AUG\_
+uses the following parameters, in addition to the common parameters below.
+
+- SV: minimal-signature-size
+
+- hash\_to\_point: the suite BLS12381G1-SHA256-SSWU-RO- defined in
+  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+
+    BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_AUG\_
+
+The ciphersuite
+BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_AUG\_
+uses the following parameters, in addition to the common parameters below.
+
+- SV: minimal-pubkey-size
+
+- hash\_to\_point: the suite BLS12381G2-SHA256-SSWU-RO- defined in
+  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+
+    BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_AUG\_
+
+The above ciphersuites share the following common parameters:
+
+- SC: message-augmentation
+
+- EC: BLS12-381, as defined in (#bls12381def).
+
+- H: SHA-256
+
+## Proof of possession ciphersuites
+
+The ciphersuite
+BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_POP\_
+uses the following parameters, in addition to the common parameters below.
+
+- SV: minimal-signature-size
+
+- hash\_to\_point: the suite BLS12381G1-SHA256-SSWU-RO- defined in
+  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+
+    BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_POP\_
+
+- hash\_pubkey\_to\_point: the suite BLS12381G1-SHA256-SSWU-RO- defined in
+  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+
+    BLS\_POP\_BLS12381G1-SHA256-SSWU-RO-\_POP\_
+
+The ciphersuite
+BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_POP\_
+uses the following parameters, in addition to the common parameters below.
+
+- SV: minimal-pubkey-size
+
+- hash\_to\_point: the suite BLS12381G2-SHA256-SSWU-RO- defined in
+  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+
+    BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_POP\_
+
+- hash\_pubkey\_to\_point: the suite BLS12381G2-SHA256-SSWU-RO- defined in
+  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+
+    BLS\_POP\_BLS12381G2-SHA256-SSWU-RO-\_POP\_
+
+The above ciphersuites share the following common parameters:
+
+- SC: proof-of-possession
+
+- EC: BLS12-381, as defined in (#bls12381def).
+
+- H: SHA-256
 
 # Security Considerations
 
@@ -927,6 +1055,35 @@ This document does not make any requests of IANA.
 --->
 
 {backmatter}
+
+# BLS12-381 {#bls12381def}
+
+The ciphersuites in (#ciphersuites) are based upon the BLS12-381
+pairing-friendly elliptic curve.
+The following defines the correspondence between the primitives
+in (#definitions) and the parameters given in Section 4.2.2 of
+[I-D.pairing-friendly-curves].
+
+- E1, G1: the curve E and its order-r subgroup.
+
+- E2, G2: the curve E' and its order-r subgroup.
+
+- GT: the subgroup G\_T.
+
+- P1: the point BP.
+
+- P2: the point BP'.
+
+- e: the optimal Ate pairing defined in Appendix A of
+  [I-D.pairing-friendly-curves].
+
+- point\_to\_octets and octets\_to\_point use the compressed
+  serialization formats for E1 and E2 defined by [ZCash].
+
+- subgroup\_check MAY use either the naive check described
+  in (#definitions) or the optimized check given by [Bowe19].
+
+<!-- [ZCash](https://github.com/zkcrypto/pairing/blob/master/src/bls12_381/README.md). -->
 
 # Test Vectors
 
