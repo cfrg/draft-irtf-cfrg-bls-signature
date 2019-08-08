@@ -238,7 +238,7 @@ The following notation and primitives are used:
   Each of the ciphersuites in (#ciphersuites) specifies the hash\_to\_point
   algorithm to be used.
 
-## API
+## API {#blsapi}
 
 The BLS signature scheme defines the following API:
 
@@ -530,7 +530,7 @@ result = CoreAggregateVerify((PK_1, message_1), ..., (PK_n, message_n),
 
 Inputs:
 - PK_1, ..., PK_n, public keys in the format output by KeyGen.
-- message_i, ..., message_n, octet strings.
+- message_1, ..., message_n, octet strings.
 - signature, an octet string output by Aggregate.
 
 Outputs:
@@ -552,6 +552,138 @@ Procedure:
 
 # BLS Signatures {#schemes}
 
+This section defines three signature schemes that differ only in the way
+that they defend against rogue key attacks ((#definitions)).
+
+- Basic: to defend against rogue key attacks, this scheme requires
+  all messages signed by any aggregate signature to be distinct.
+
+- Message augmentation: in this scheme, signatures are generated
+  over the concatenation of the public key and the message.
+
+- Proof of possession: this scheme uses a separate public key
+  validation step, called a proof of possession, to defend against
+  rogue key attacks.
+  This enables an optimization to aggregate signature verification
+  for the case that all signatures are on the same message.
+
+All of the schemes in this section are built on the set of core operations
+defined in (#coreops), and uses the parameters and primitives described
+in (#coreparams).
+In addition, each scheme has two variants as discussed in (#corevariants).
+
+All three schemes expose the KeyGen and Aggregate operations defined in (#coreops).
+The sections below define the other API functions ((#blsapi)) for each scheme.
+
+## Basic scheme {#schemenul}
+
+In the basic scheme, the Sign function is identical to CoreSign
+and the Verify function is identical to CoreVerify ((#coreops)).
+AggregateVerify is defined below.
+
+All public keys used by Verify and AggregateVerify MUST be validated
+as described in (#pubkeyvalid).
+
+### AggregateVerify
+
+This function first ensures that all messages are distinct, and then
+invokes CoreAggregateVerify.
+
+~~~
+result = AggregateVerify((PK_1, message_1), ..., (PK_n, message_n),
+                         signature)
+
+Inputs:
+- PK_1, ..., PK_n, public keys in the format output by KeyGen.
+- message_1, ..., message_n, octet strings.
+- signature, an octet string output by Aggregate.
+
+Outputs:
+- result, either VALID or INVALID.
+
+Procedure:
+1. If any two input messages are equal, return INVALID.
+2. return CoreAggregateVerify((PK_1, message_1), ..., (PK_n, message_n),
+                              signature)
+~~~
+
+## Message augmentation {#schemeaug}
+
+In the message augmentation scheme, Sign, Verify, and AggregateVerify
+prepend the public key to the messages being signed or verified.
+
+All public keys used by Verify and AggregateVerify MUST be validated
+as described in (#pubkeyvalid).
+
+### Sign
+
+To match the API for Sign defined in (#blsapi), this function
+recomputes the public key corresponding to the input SK.
+Implementations MAY instead implement an interface that takes
+the public key as an input.
+
+Note that the point P and the point\_to\_pubkey function are
+defined in (#coreparams).
+
+~~~
+signature = Sign(SK, message)
+
+Inputs:
+- SK, the secret key output by an invocation of KeyGen.
+- message, an octet string.
+
+Outputs:
+- signature, an octet string.
+
+Procedure:
+1. xP = point_to_pubkey(SK * P)
+2. PK = point_to_pubkey(xP)
+3. return CoreSign(SK, PK || message)
+~~~
+
+
+### Verify
+
+~~~
+result = Verify(PK, message, signature)
+
+Inputs:
+- PK, a public key in the format output by KeyGen.
+- message, an octet string.
+- signature, an octet string in the format output by CoreSign.
+
+Outputs:
+- result, either VALID or INVALID.
+
+Procedure:
+1. return CoreVerify(PK, PK || message, signature)
+~~~
+
+
+### AggregateVerify
+
+~~~
+result = AggregateVerify((PK_1, message_1), ..., (PK_n, message_n),
+                         signature)
+
+Inputs:
+- PK_1, ..., PK_n, public keys in the format output by KeyGen.
+- message_1, ..., message_n, octet strings.
+- signature, an octet string output by Aggregate.
+
+Outputs:
+- result, either VALID or INVALID.
+
+Procedure:
+1. for i in 1, ..., n:
+2.    mprime_i = PK_i || message_i
+3. return CoreAggregateVerify((PK_1, mprime_1), ..., (PK_n, mprime_n),
+                              signature)
+~~~
+
+
+## Proof of possession {#schemepop}
+
 
 
 # Ciphersuites {#ciphersuites}
@@ -559,7 +691,8 @@ Procedure:
 
 # Security Considerations
 
-## Verifying public keys
+## Validating public keys {#pubkeyvalid}
+
 When users register a public key, we should ensure that it is well-formed.
 This requires a G2 membership test. In applications where we use aggregation,
 we need to enforce security against rogue key attacks [Boneh-Drijvers-Neven 18a](https://crypto.stanford.edu/~dabo/pubs/papers/BLSmultisig.html).
