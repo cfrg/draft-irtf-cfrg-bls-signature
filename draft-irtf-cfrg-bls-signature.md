@@ -75,20 +75,6 @@ and efficient. Its simplicity and cryptographic properties allows it
 to be useful in a variety of use-cases, specifically when minimal
 storage space or bandwidth are required.
 
-<!---
-__old version__
-The BLS signature scheme was introduced by Boneh–Lynn–Shacham
-in 2001. The signature scheme relies on pairing-friendly curves and
-supports non-interactive aggregation properties.
-That is, given a collection of signatures (signature\_1, ..., signature\_n), anyone
-can produce a short signature (signature) that authenticates the entire
-collection. BLS signature scheme is simple, efficient and can be used
-in a variety of network protocols and systems to compress signatures
-or certificate chains. This document specifies the BLS
-signature and the aggregation algorithms.
---->
-
-
 
 {mainmatter}
 
@@ -114,11 +100,6 @@ of important efficiency properties:
 into a single signature (signature). Moreover, the compressed signature can
 be verified using only n+1 pairings (as opposed to 2n pairings, when verifying
 n signatures separately).
-
-<!---
-we believe the scheme will find very interesting
-applications.
---->
 
 Given the above properties,
 the scheme enables many interesting applications.
@@ -160,10 +141,6 @@ of signatures.
 BLS also allows for signature compression. In other words, a single signature is
 sufficient to anthenticate multiple messages and public keys.
 
-<!---
-In addition, the BLS signature scheme is also integrated into major blockchain
-projects such as Algorand, Chia, Dfinity, Ethereum.
---->
 
 ## Organization of this document
 
@@ -202,15 +179,6 @@ list of messages and public keys.
   This document specifies two methods for securing against rogue key attacks.
   These schemes are defined in (#schemes).
 
-<!---
-* Signer:  The Signer generates a pair (SK, PK), publishes
-   PK for everyone to see, but keeps the secret key SK.
-
-* Verifier:  The Verifier holds a public key PK. It receives (message, signature)
-   that it wishes to verify.
-
-* Aggregator: The Aggregator receives a collection of signatures (signature\_1, ..., signature\_n) that it wishes to compress into a short signature.
---->
 
 The following notation and primitives are used:
 
@@ -279,72 +247,19 @@ The BLS signature scheme defines the following API:
   deterministic signature given a secret key SK and a message.
 
 
-<!--
-   The Signer, given an input message, uses the secret key SK to
-   obtain and output a signature.
-
-    signature = Sign(SK, message)
-
-   The BLS signing algorithm is deterministic.
-
-   may be deterministic or randomized, depending
-   on the scheme. Looking ahead, BLS instantiates a deterministic signing algorithm.
--->
-
 * Verify(PK, message, signature) -> VALID or INVALID: 
   a verification algorithm that outputs VALID if signature is a valid
   signature of message under public key PK, and INVALID otherwise.
 
-
-<!--
-   The signature allows a verifier holding the public key PK to verify
-   that signature is indeed produced by the signer holding the associated secret key.   Thus, the digital scheme also comes with an algorithm
--->
-
-<!--
-   that outputs VALID if signature is a valid signature of message, and INVALID otherwise.
--->
-
-<!--
-We require that SK, PK, signature and message are octet strings.
-
-### Aggregation
--->
-
 * Aggregate(signature\_1, ..., signature\_n) -> signature:
   an aggregation algorithm that compresses a collection of signatures
   into a single signature.
-
-<!--
-  Note that the aggregator does not need to know the messages corresponding to individual
-  signatures.
-
-  The scheme also includes an algorithm to verify an aggregated signature, given a collection
-  of corresponding public keys, the aggregated signature, and one or more messages.
--->
 
 * AggregateVerify((PK\_1, message\_1), ..., (PK\_n, message\_n), signature) -> VALID or INVALID:
   an aggregate verification algorithm that outputs VALID if signature
   is a valid aggregated signature for a collection of public keys and messages,
   and outputs INVALID otherwise.
 
-<!--
-  that outputs VALID if signature is a valid aggregated signature of messages message\_1, ..., message\_n, and
-  INVALID otherwise.
--->
-
-<!--
-* AggregateVerifyOM(PK\_1, ..., PK\_n, message, signature) -> VALID or INVALID:
-  an aggregate verification algorithm that outputs
-  VALID if signature is a valid aggregated signature for a collection of public keys all
-  signing the same message, and outputs INVALID otherwise.
-  This method is optional; if not available, AggregateVerify SHOULD be used instead.
--->
-
-<!--
-  The verification algorithm may also accept a simpler interface that allows
-  to verify an aggregate signature of the same message. That is, message\_1 = message\_2 = ... = message\_n.
--->
 
 ## Dependencies
 
@@ -354,11 +269,13 @@ This draft depends on the following documents:
 
 * [I-D.pairing-friendly-curves] defines pairing-friendly elliptic curves and related operations.
 
+
 ## Requirements
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
 document are to be interpreted as described in [@!RFC2119].
+
 
 # Core operations {#coreops}
 
@@ -367,17 +284,6 @@ These operations MUST NOT be used except as described in that section.
 
 Instantiating these operations requires a pairing-friendly elliptic curve
 and associated functionality given in (#definitions).
-
-<!--
-given by e : G1 x G2 -> GT, where G1, G2 are prime-order
-subgroups of elliptic curve groups E1, E2.
-This draft suggests to use curve BLS12-381 as
-described in [I-D.pairing-friendly-curves].
-Support of other curves SHALL be defined in
-extensions or future versions of this draft, or in
- separate
-documents.
--->
 
 Each core operation has two variants that trade off signature
 and public key size:
@@ -397,98 +303,6 @@ and public key size:
     For instance, when instantiated with the pairing-friendly curve
     BLS12-381 [I-D.pairing-friendly-curves], this yields a 48-byte signature.
     For comparison, an EdDSA signature over curve25519 is 64 bytes [RFC8032].
--->
-
-<!--
-Use G1 to host data types of public keys and
-G2 for signatures. This latter case comes up when we do signature aggregation,
-where most of the communication costs come from public keys. This
-is particularly relevant in applications such as blockchains
-and compressing certificate chains, where the goal is to minimize
-the total size of multiple public keys and aggregated signatures.
--->
-
-<!--
-The rest of the write-up assumes the first variant.
-It is straightforward to obtain algorithms for the
-second variant from those of the first variant where we simply
-swap G1,E1 with G2,E2 respectively.
--->
-
-<!--
-#### Pairing (copied from the NTT draft)
-
-   Pairing is a kind of the bilinear map defined over an elliptic curve.
-   Examples include Weil pairing, Tate pairing, optimal Ate pairing [2]
-   and so on.  Especially, optimal Ate pairing sis considered to be
-   efficient to compute and mainly used for implementation.
-
-   Let E be an elliptic curve defined over the prime field F_p.  Let G_1
-   be the set of rational points on E of order r, and G_2 be the image
-   by the twisting isomorphism.  Let G_T be the order r subgroup of a
-   field F_p^k.  Pairing is defined as a bilinear map e: (G_1, G_2) ->
-   G_T satisfying the following properties:
-
-   (1)  Bilinearity: for any S in G_1, for any T in G_2, for any a, b in
-        Z_r, we have the relation e([a]S, [b]T) = e(S, T)^{a * b}.
-
-   (2)  Non-degeneracy: for any T in G_2, e(S, T) = 1 if and only if S =
-        O_E.  Similarly, for any S in G_1, e(S, T) = 1 if and only if T
-        = O_E.
-
-   (3)  Computability: for any S in G_1, for any T in G_2, the bilinear
-        map is efficiently computable.
--->
-
-<!--
-## Preliminaries
-
-Notation and primitives used:
-
-- E1, E2 - elliptic curves (EC) defined over a field
-
-- P1, P2 - elements of E1,E2 of prime order r
-
-- G1, G2 - prime-order subgroups of E1, E2 generated by P1, P2
-
-- GT - order r subgroup of the multiplicative group over a field
-
-- We require an efficient pairing: (G1, G2) -> GT that is
-  bilinear and non-degenerate.
-
-- Elliptic curve operations in E1 and E2 are written in additive notation, with P+Q
-  denoting point addition and x \* P denoting scalar multiplication
-  of a point P by a scalar x.
-
-    TBD: [I-D.pairing-friendly-curves] uses the notation x[P].
-
-- Field operations in GT are written in multiplicative notation, with a \* b denoting
-  field element multiplication.  
-
-- || - octet string concatenation
-
-- domain\_separator - an identifier for the ciphersuite. In current draft "BLS12\_381-SHA384-try\_and\_increment". Future identifiers MUST include
-  an identifier of the curve, for example BLS12-381, an identifier of the hash function, for example SHA512, and the algorithm in use, for example, try-and-increment.
-
-Type conversions:
-
-- int\_to\_string(a, len) - conversion of nonnegative integer a to
-    octet string of length len.
-
-- string\_to\_int(a\_string) - conversion of octet string a\_string
-    to nonnegative integer.
-
-- E1\_to\_string - conversion of  E1 point to octet string
-
-- string\_to\_E1 - conversion of octet string to E1 point.
-    Returns INVALID if the octet string does not convert to a valid E1 point.
-
-Hashing Algorithms
-
--    hash\_to\_G1 - cryptographic hashing of octet string to G1 element.
-    Must return a valid G1 element. Specified in (#auxiliary).
-
-  hash_to_Zr(a_1, ..., a_n) - a hashing algorithm that given a vector of size n of G2 elements outputs a vector of size n of integers in the range 1 and r-1.
 -->
 
 ##  KeyGen {#keygen}
@@ -691,201 +505,6 @@ Procedure:
 8. return signature
 ~~~
 
-<!--
-### Verify-Aggregated-1
-
-    Input: (PK_1, ..., PK_n), message, signature
-    Output: "VALID" or "INVALID"
-
-1.  PK' = PK\_1 + ... + PK\_n
-1.  Output Verify(PK', message, signature)
-
-### Verify-Aggregated-n
-
-    Input: (PK_1, message_1), ..., (PK_n, message_n), signature    
-    Output: "VALID" or "INVALID"
-
-1.  H\_i = hash\_to\_G1(suite\_string, message\_i)
-1.  Gamma = string\_to\_E1(signature)
-1.  If Gamma is "INVALID", output "INVALID" and stop
-1.  If r \* Gamma != 0, output "INVALID" and stop
-1.  Compute c = pairing(Gamma, P2)
-1.  Compute c' = pairing(H\_1, PK\_1) \* ... \* pairing(H\_n, PK\_n)
-1.  If c and c' are equal, output "VALID", else output "INVALID"
-
--->
-
-<!--
-## Auxiliary Functions {#auxiliary}
-
-Here, we describe the auxiliary functions relating to serialization
-and hashing to the elliptic curves E, where E may be E1 or E2.
-
-(Authors' note: this section is extremely preliminary and we anticipate
-substantial updates pending feedback from the community. We describe
-a generic approach for hashing, in order to cover hashing into
-curves defined over prime power extension fields, which are not covered in
-[I-D.irtf-cfrg-hash-to-curve]. We expect to support several different hashing
-algorithms specified via the suite\_string.)
-
-### Preliminaries
-In all the pairing-friendly curves, E is defined over a field
-GF(p^k). We also assume an explicit isomorphism that allows us to
-treat GF(p^k) as GF(p). In most of the curves in [I-D.pairing-friendly-curves],
-we have k=1 for E1 and k=2 for E2.
-
-Each point (x,y) on E can be specified by the
-x-coordinate in GP(p)^k plus a single bit to determine whether the point
-is (x,y) or (x,-y), thus requiring k log(p) + 1 bits [I-D.irtf-cfrg-hash-to-curve].
-
-Concretely, we encode a point (x,y) on E as a string comprising k substrings
-s\_1, ..., s\_k each of length log(p)+2 bits, where
-
-* the first bit of s\_1 indicates whether E is the point at infinity
-* the second bit of s\_1 indicates whether the point is (x,y) or (x,-y)
-* the first two bits of s\_2, ..., s\_k are 00
-* the x-coordinate is specified by the last log(p) bits of s\_1, ..., s\_k
-
-In fact, we will pad each substring with 0 bits so that the length of each substring
-is a multiple of 8 bits.
-
-This section uses the following constants:
-
-* pbits: the number of bits to represent integers modulo p.
-* padded\_pbits: the smallest multiple of 8 that is greater than pbits+2.
-* padlen: padded\_pbits - padlen
-
-| curve | pbits | padded\_pbits | padlen |
-|-------|-------|--------------|--------|
-|BLS-381| 381   | 384          | 3      |
-
-
-### Type conversions
-
-In general we view a string str as a vector of substrings s\_1, ... s\_k for k >= 1;
-each substring is of padded\_pbits bits; and k is set properly according to the individual
-curve.
-For example,  for BLS12-381 curve, k=1 for E1 and 2 for E2.
-If the input string is not a multiple of padded\_pbits, we
-tail pad the string to meet the correct length.
-
-A string that encodes an E1/E2 point may have the following structure:
-* for the first substring s\_1
-    * the first bit indicates if the point is the point at infinity
-    * the second bit is either 0 or 1, denoted by y\_bit
-    * the third to padlen bits are 0
-
-* for the rest substrings s\_2, ... s\_k
-    * the first padlen bits are 0s
-
-TBD: some implementation uses an additional leading bit to indicate the
-string is in a compressed form (give x coordinate and  the parity/sign of y coordinate)
-or in an uncompressed form (give both x and y coordinate).
-
-#### curve-to-string
-
-    Input: input_string - a point P = (x, y) on the curve
-    Output: a string of k \* padded_pbits
-
-  Steps:
-
-  1. If P is the point at infinity, output 0b1000...0
-  2. Parse y as y\_1, ..., y\_k; set y\_bit as y\_1 mod 2
-  2. Parse x as x\_1, ..., x\_k
-  3. set the substring s\_1 =  0 | y\_bit | padlen-2 of 0s | int\_to\_string(x\_1)  
-  4. set substrings s\_i = padlen of 0s | int\_to\_string(x\_i)  for 2<=i<=k
-  5. Output the string s\_1 | s\_2 | ... | s\_k
-
-
-#### string-to-curve
-
-The algorithm takes as follows:
-
-    Input: input_string - a single octet string.
-    Output: Either a point P on the curve, or INVALID
-
-  Steps:
-
-  1. If length(input\_string) is < padded\_pbits/8 bytes, lead pad input\_string with 0s;
-
-  1. If length(input\_string) is not a multiple of padded\_pbits/8 bytes, tail pad with 0, ..., 0;
-
-  1. Parse input\_string as a vector of substrings s\_1, ..., s\_k
-
-  3. b = s\_1[0]; i.e., the first byte of the first substring;
-
-  4. If the first bit of b is 1, return P = 0 (the point at infinity)
-
-  5. Set y\_bit to be the second bit of b and then set the second bit of b to 0
-
-  6. If the third to plen bits of input\_string are not 0, return INVALID
-
-  6. Set x\_1 = string\_to\_int(s\_1)
-     1. if x\_1 > p then return INVALID
-
-  7. for i in [2 ... k]
-
-      1. b = s\_i[0]
-      2. if top plen bits of b is not 0, return INVALID
-      3. set x\_i = string\_to\_int(s\_i)
-         1. if x\_1 > p then return INVALID
-  8. Set x= (x\_1, ..., x\_k)    
-
-  7. solve for y so that (x, y) satisfies elliptic curve equation;
-     * output INVALID if equation is not solvable with x
-     * parse y as (y\_1, ..., y\_k)   
-     * if solutions exist, there should be a pair of ys where y\_1-s differ by parity
-     * set y to be the solution where y\_1 is odd if y\_bit = 1
-     * set y to be the solution where y\_1 is even if y\_bit = 0
-  8. output P = (x, y) as a curve point.
-
-TBD: check the parity property remains true for E2. The Chia and Etherum implementations
-use lexicographic ordering.
-
-### Membership test
-
-The following g1\_membership\_test and g1\_membership\_test algorithms is to
-check if a E1 or E2 point is in the correct prime subgroup. Example:
-
-  r = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
-
-for curve BLS12-381.
-
-
-
-  g1\_membership\_test(input\_point)
-
-  input:
-
-     input_point - a point P = (x, y) on the curve E1
-
-  Output:
-
-     "VALID" if P is in G1; "INVALID" otherwise
-
-  Steps:
-
-  1.  r = order of group G1
-  1.  if r \* P  == 1 return "VALID", otherwise, return "INVALID"
-
-
-
-  g2\_membership\_test(input\_point)
-
-  input:
-
-     input_point - a point P = (x, y) on the curve E2
-
-  Output:
-
-     "VALID" if P is in G2; "INVALID" otherwise
-
-  Steps:
-
-  1.  r = order of group G2
-  1.  if r \* P  == 1 return "VALID", otherwise, return "INVALID"
-
--->
 
 # BLS Signatures {#schemes}
 
