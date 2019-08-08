@@ -151,9 +151,10 @@ This document is organized as follows:
 - (#coreops) defines primitive operations used in the BLS signature scheme.
   These operations MUST NOT be used alone.
 
-- (#schemes) defines three variants of the BLS Signature scheme.
+- (#schemes) defines three BLS Signature schemes giving slightly different
+  security and performance properties.
 
-- (#ciphersuites) gives recommended ciphersuites.
+- (#ciphersuites) defines the format for a ciphersuites and gives recommended ciphersuites.
 
 - The appendices give test vectors, etc.
 
@@ -831,9 +832,26 @@ This section defines the format for a BLS ciphersuite.
 It also gives concrete ciphersuites based on the BLS12-381 pairing-friendly
 elliptic curve [I-D.pairing-friendly-curves].
 
+## Ciphersuite format
+
 A ciphersuite specifies all parameters from (#coreparams),
-a scheme from (#schemes), and any parameters that scheme requires.
+a scheme from (#schemes), and any parameters the scheme requires.
 In particular, a ciphersuite comprises:
+
+- ID: the ciphersuite ID, an ASCII string. The RECOMMENDED format for
+  this string is
+
+    "BLS\_SIG\_" || H2C\_SUITE || "\_" || SC\_TAG || "\_"
+
+    - strings in double quotes are literal ASCII octet sequences
+
+    - H2C\_SUITE is the name of the hash-to-curve ciphersuite
+      used to define the hash\_to\_point and hash\_pubkey\_to\_point
+      functions.
+
+    - SC\_TAG SHOULD be "NUL" when SC is basic,
+    "AUG" when SC is message-augmentation, or
+    "POP" when SC is proof-of-possession.
 
 - SC: the scheme, either basic, message-augmentation, or proof-of-possession.
 
@@ -846,31 +864,47 @@ In particular, a ciphersuite comprises:
 - H: a cryptographic hash function.
 
 - hash\_to\_point: a hash from arbitrary strings to elliptic curve points.
+  It is RECOMMENDED that hash\_to\_point be defined in terms of a
+  hash-to-curve suite [I-D.hash-to-curve] with domain separation tag equal
+  to the ID string.
 
 - hash\_pubkey\_to\_point (only specified when SC is proof-of-possession):
   a hash from serialized public keys to elliptic curve points.
+  It is RECOMMENDED that hash\_pubkey\_to\_point be defined in terms of a
+  has-to-curve suite [I-D.hash-to-curve], with domain separation tag
+  constructed similarly to the ID string, namely:
 
-## Basic ciphersuites
+    "BLS\_POP\_" || H2C\_SUITE || "\_" || SC\_TAG || "\_"
 
-The ciphersuite
+## Ciphersuites for BLS12-381
+
+The following ciphersuites are all built on the BLS12-381 elliptic curve.
+The required primitives for this curve are given in (#bls12381def).
+
+These ciphersuites use the hash-to-curve suites BLS12381G1-SHA256-SSWU-RO-
+and BLS12381G2-SHA256-SSWU-RO- defined in [I-D.hash-to-curve].
+Each ciphersuite defines a unique hash\_to\_point function by specifying
+a domain separation tag (see [I-D.hash-to-curve, Section 5.1).
+
+### Basic
+
+The ciphersuite with ID
 BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_NUL\_
 uses the following parameters, in addition to the common parameters below.
 
 - SV: minimal-signature-size
 
-- hash\_to\_point: the suite BLS12381G1-SHA256-SSWU-RO- defined in
-  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+- hash\_to\_point: BLS12381G1-SHA256-SSWU-RO- with the ASCII domain separation tag
 
     BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_NUL\_
 
-The ciphersuite
+The ciphersuite with ID
 BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_NUL\_
 uses the following parameters, in addition to the common parameters below.
 
 - SV: minimal-pubkey-size
 
-- hash\_to\_point: the suite BLS12381G2-SHA256-SSWU-RO- defined in
-  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+- hash\_to\_point: BLS12381G2-SHA256-SSWU-RO- with the ASCII domain separation tag
 
     BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_NUL\_
 
@@ -882,27 +916,25 @@ The above ciphersuites share the following common parameters:
 
 - H: SHA-256
 
-## Message augmentation ciphersuites
+### Message augmentation
 
-The ciphersuite
+The ciphersuite with ID
 BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_AUG\_
 uses the following parameters, in addition to the common parameters below.
 
 - SV: minimal-signature-size
 
-- hash\_to\_point: the suite BLS12381G1-SHA256-SSWU-RO- defined in
-  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+- hash\_to\_point: BLS12381G1-SHA256-SSWU-RO- with the ASCII domain separation tag
 
     BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_AUG\_
 
-The ciphersuite
+The ciphersuite with ID
 BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_AUG\_
 uses the following parameters, in addition to the common parameters below.
 
 - SV: minimal-pubkey-size
 
-- hash\_to\_point: the suite BLS12381G2-SHA256-SSWU-RO- defined in
-  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+- hash\_to\_point: BLS12381G2-SHA256-SSWU-RO- with the ASCII domain separation tag
 
     BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_AUG\_
 
@@ -914,37 +946,33 @@ The above ciphersuites share the following common parameters:
 
 - H: SHA-256
 
-## Proof of possession ciphersuites
+### Proof of possession
 
-The ciphersuite
+The ciphersuite with ID
 BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_POP\_
 uses the following parameters, in addition to the common parameters below.
 
 - SV: minimal-signature-size
 
-- hash\_to\_point: the suite BLS12381G1-SHA256-SSWU-RO- defined in
-  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+- hash\_to\_point: BLS12381G1-SHA256-SSWU-RO- with the ASCII domain separation tag
 
     BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_POP\_
 
-- hash\_pubkey\_to\_point: the suite BLS12381G1-SHA256-SSWU-RO- defined in
-  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+- hash\_pubkey\_to\_point: BLS12381G1-SHA256-SSWU-RO- with the ASCII domain separation tag
 
     BLS\_POP\_BLS12381G1-SHA256-SSWU-RO-\_POP\_
 
-The ciphersuite
+The ciphersuite with ID
 BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_POP\_
 uses the following parameters, in addition to the common parameters below.
 
 - SV: minimal-pubkey-size
 
-- hash\_to\_point: the suite BLS12381G2-SHA256-SSWU-RO- defined in
-  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+- hash\_to\_point: BLS12381G2-SHA256-SSWU-RO- with the ASCII domain separation tag
 
     BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_POP\_
 
-- hash\_pubkey\_to\_point: the suite BLS12381G2-SHA256-SSWU-RO- defined in
-  [I-D.hash-to-curve], with the following ASCII domain separation tag:
+- hash\_pubkey\_to\_point: BLS12381G2-SHA256-SSWU-RO- with the ASCII domain separation tag
 
     BLS\_POP\_BLS12381G2-SHA256-SSWU-RO-\_POP\_
 
@@ -1009,13 +1037,18 @@ One possibility is to generate IKM from a trusted source of randonmess.
 Guidelines on constructing such a source are outside the scope of this
 document.
 
-## Implementing hash\_to\_point
+## Implementing hash\_to\_point and hash\_pubkey\_to\_point
 
-The security analysis models hash\_to\_point as a random oracle.
-It is crucial that H is implemented using a cryptographically
+The security analysis models hash\_to\_point and hash\_pubkey\_to\_point
+as random oracles.
+It is crucial that these functions are implemented using a cryptographically
 secure hash function.
 For this purpose, implementations MUST meet the requirements of
 [I-D.hash-to-curve].
+
+In addition, ciphersuites MUST specify unique domain separation tags
+for hash\_to\_point and hash\_pubkey\_to\_point.
+The domain separation tag format used in (#ciphersuites) is the RECOMMENDED one.
 
 # Implementation Status
 
