@@ -1,13 +1,11 @@
 %%%
-Title = "draft-boneh-bls-signature-00.txt"
+Title = "draft-irtf-cfrg-bls-signature-00.txt"
 abbrev = "BLS-signature"
 category = "info"
-docName = "draft-boneh-bls-signature-00.txt"
-ipr= "trust200902"
+docName = "draft-irtf-cfrg-bls-signature-00.txt"
+ipr = "trust200902"
 workgroup = "CFRG"
-
-date = 2019-02-08
-
+date = 2019-08-08
 
 [[author]]
 initials="D."
@@ -61,6 +59,172 @@ organization="Algorand"
   country = "USA"
 %%%
 
+<reference anchor="Bowe19" target="https://eprint.iacr.org/2019/814">
+  <front>
+    <title>Faster subgroup checks for BLS12-381</title>
+    <author initials="S." surname="Bowe" fullname="Sean Bowe">
+      <organization>Electric Coin Company</organization>
+    </author>
+    <date year="2019" month="July"/>
+  </front>
+</reference>
+<reference anchor="FIPS180-4" target="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf">
+  <front>
+    <title>FIPS Publication 180-4: Secure Hash Standard</title>
+    <author>
+      <organization>National Institute of Standards and Technology (NIST)</organization>
+    </author>
+    <date year="2015" month="August"/>
+  </front>
+</reference>
+<reference anchor="HDWH12" target="https://www.usenix.org/system/files/conference/usenixsecurity12/sec12-final228.pdf">
+  <front>
+    <title>Mining your Ps and Qs: Detection of widespread weak keys in network devices</title>
+    <author initials="N." surname="Heninger" fullname="Nadia Heninger">
+      <organization>University of California, San Diego</organization>
+    </author>
+    <author initials="Z." surname="Durumeric" fullname="Zakir Durumeric">
+      <organization>The University of Michigan</organization>
+    </author>
+    <author initials="E." surname="Wustrow" fullname="Eric Wustrow">
+      <organization>The University of Michigan</organization>
+    </author>
+    <author initials="J.A." surname="Halderman" fullname="J. Alex Halderman">
+      <organization>The University of Michigan</organization>
+    </author>
+    <date year="2012" month="August"/>
+  </front>
+  <seriesInfo name="In" value="USENIX Security"/>
+  <seriesInfo name="pages" value="205-220"/>
+</reference>
+<reference anchor="ZCash" target="https://github.com/zkcrypto/pairing/blob/master/src/bls12_381/README.md#serialization">
+  <front>
+    <title>BLS12-381</title>
+    <author>
+      <organization>Electric Coin Company</organization>
+    </author>
+    <date year="2017" month="July"/>
+  </front>
+</reference>
+<reference anchor="BLS01" target="https://www.iacr.org/archive/asiacrypt2001/22480516.pdf">
+  <front>
+    <title>Short signatures from the Weil pairing</title>
+    <author initials="D." surname="Boneh" fullname="Dan Boneh">
+      <organization>Stanford University</organization>
+    </author>
+    <author initials="B." surname="Lynn" fullname="Ben Lynn">
+      <organization>Stanford University</organization>
+    </author>
+    <author initials="H." surname="Shacham" fullname="Hovav Shacham">
+      <organization>Stanford University</organization>
+    </author>
+    <date year="2001" month="December"/>
+  </front>
+  <seriesInfo name="In" value="ASIACRYPT"/>
+  <seriesInfo name="pages" value="514-532"/>
+</reference>
+<reference anchor="BGLS03" target="https://link.springer.com/chapter/10.1007%2F3-540-39200-9_26">
+  <front>
+    <title>Aggregate and verifiably encrypted signatures from bilinear maps</title>
+    <author initials="D." surname="Boneh" fullname="Dan Boneh">
+      <organization>Stanford University</organization>
+    </author>
+    <author initials="C." surname="Gentry" fullname="Craig Gentry">
+      <organization>Stanford University</organization>
+    </author>
+    <author initials="B." surname="Lynn" fullname="Ben Lynn">
+      <organization>Stanford University</organization>
+    </author>
+    <author initials="H." surname="Shacham" fullname="Hovav Shacham">
+      <organization>Stanford University</organization>
+    </author>
+    <date year="2003" month="May"/>
+  </front>
+  <seriesInfo name="In" value="EUROCRYPT"/>
+  <seriesInfo name="pages" value="416-432"/>
+</reference>
+<reference anchor="BNN07" target="https://link.springer.com/chapter/10.1007%2F978-3-540-73420-8_37">
+  <front>
+    <title>Unrestricted aggregate signatures</title>
+    <author initials="M." surname="Bellare" fullname="Mihir Bellare">
+      <organization>University of California, San Diego</organization>
+    </author>
+    <author initials="C." surname="Namprempre" fullname="Chanathip Namprepre">
+      <organization>Thammasat University</organization>
+    </author>
+    <author initials="G." surname="Neven" fullname="Gregory Neven">
+      <organization>Katholieke Universiteit Leuven</organization>
+    </author>
+    <date year="2007" month="July"/>
+  </front>
+  <seriesInfo name="In" value="ICALP"/>
+  <seriesInfo name="pages" value="411-422"/>
+</reference>
+<reference anchor="Bol03" target="https://link.springer.com/chapter/10.1007%2F3-540-36288-6_3">
+  <front>
+    <title>Threshold Signatures, Multisignatures and Blind Signatures Based on the Gap-Diffie-Hellman-Group Signature Scheme</title>
+    <author initials="A." surname="Boldyreva" fullname="Alexandra Boldyreva">
+      <organization>University of California, San Diego</organization>
+    </author>
+    <date year="2003" month="January"/>
+  </front>
+  <seriesInfo name="In" value="PKC"/>
+  <seriesInfo name="pages" value="31-46"/>
+</reference>
+<reference anchor="LOSSW06" target="https://link.springer.com/chapter/10.1007/11761679_28">
+  <front>
+    <title>Sequential Aggregate Signatures and Multisignatures Without Random Oracles</title>
+    <author initials="S." surname="Lu" fullname="Steve Lu">
+      <organization>University of California, Los Angeles</organization>
+    </author>
+    <author initials="R." surname="Ostrovsky" fullname="Rafail Ostrovsky">
+      <organization>University of California, Los Angeles</organization>
+    </author>
+    <author initials="A." surname="Sahai" fullname="Amit Sahai">
+      <organization>University of California, Los Angeles</organization>
+    </author>
+    <author initials="H." surname="Shacham" fullname="Hovav Shacham">
+      <organization>Weizmann Institute</organization>
+    </author>
+    <author initials="B." surname="Waters" fullname="Brent Waters">
+      <organization>SRI International</organization>
+    </author>
+    <date year="2006" month="May"/>
+  </front>
+  <seriesInfo name="In" value="EUROCRYPT"/>
+  <seriesInfo name="pages" value="465-485"/>
+</reference>
+<reference anchor="RY07" target="https://link.springer.com/chapter/10.1007%2F978-3-540-72540-4_13">
+  <front>
+    <title>The Power of Proofs-of-Possession: Securing Multiparty Signatures against Rogue-Key Attacks</title>
+    <author initials="T." surname="Ristenpart" fullname="Thomas Ristenpart">
+      <organization>University of California, San Diego</organization>
+    </author>
+    <author initials="S." surname="Yilek" fullname="Scott Yilek">
+      <organization>University of California, San Diego</organization>
+    </author>
+    <date year="2007" month="May"/>
+  </front>
+  <seriesInfo name="In" value="EUROCRYPT"/>
+  <seriesInfo name="pages" value="228-245"/>
+</reference>
+<reference anchor="BDN18" target="https://link.springer.com/chapter/10.1007/978-3-030-03329-3_15">
+  <front>
+    <title>Compact multi-signatures for shorter blockchains</title>
+    <author initials="D." surname="Boneh" fullname="Dan Boneh">
+      <organization>Stanford University</organization>
+    </author>
+    <author initials="M." surname="Drijvers" fullname="Manu Drijvers">
+      <organization>DFINITY</organization>
+    </author>
+    <author initials="G." surname="Neven" fullname="Gregory Neven">
+      <organization>ETH Zurich</organization>
+    </author>
+    <date year="2018" month="December"/>
+  </front>
+  <seriesInfo name="In" value="ASIACRYPT"/>
+  <seriesInfo name="pages" value="435-464"/>
+</reference>
 
 .# Abstract
 
@@ -185,7 +349,7 @@ The following notation and primitives are used:
 * a || b denotes the concatenation of octet strings a and b.
 
 * A pairing-friendly elliptic curve defines the following primitives
-  (see [I-D.pairing-friendly-curves] for detailed discussion):
+  (see [@I-D.yonezawa-pairing-friendly-curves] for detailed discussion):
 
   - E1, E2: elliptic curve groups defined over finite fields.
     This document assumes that E1 has a more compact representation than
@@ -229,13 +393,13 @@ The following notation and primitives are used:
     is an element of the subgroup of order r, and INVALID otherwise.
     This function can always be implemented by checking that r \* P is equal
     to the identity element. In some cases, faster checks may also exist,
-    e.g., [Bowe19].
+    e.g., [@Bowe19].
 
-* I2OSP and OS2IP are the functions defined in [RFC3447, Section 4].
+* I2OSP and OS2IP are the functions defined in [@!RFC3447], Section 4.
 
 * hash\_to\_point(ostr) -> P: a cryptographic hash function that takes as input an
   arbitrary octet string and returns a point on an elliptic curve.
-  Functions of this kind are defined in [I-D.hash-to-curve].
+  Functions of this kind are defined in [@I-D.irtf-cfrg-hash-to-curve].
   Each of the ciphersuites in (#ciphersuites) specifies the hash\_to\_point
   algorithm to be used.
 
@@ -266,14 +430,6 @@ The BLS signature scheme defines the following API:
   and outputs INVALID otherwise.
 
 
-## Dependencies
-
-This draft depends on the following documents:
-
-* [I-D.hash-to-curve] gives methods to hash from octet strings to group elements.
-
-* [I-D.pairing-friendly-curves] defines pairing-friendly elliptic curves and related operations.
-
 
 ## Requirements
 
@@ -303,11 +459,6 @@ and public key size:
     since the size of (PK\_1, ..., PK\_n, signature) is dominated by
     the public keys even for small n.
 
-<!--
-    For instance, when instantiated with the pairing-friendly curve
-    BLS12-381 [I-D.pairing-friendly-curves], this yields a 48-byte signature.
-    For comparison, an EdDSA signature over curve25519 is 64 bytes [RFC8032].
--->
 
 ## Parameters {#coreparams}
 
@@ -320,7 +471,7 @@ The core operations in this section depend on several parameters:
   given in (#definitions).
 
 - H, a hash function H that MUST be a secure cryptographic hash function,
-  e.g., SHA-256 [FIPS180-4].
+  e.g., SHA-256 [@FIPS180-4].
   For security, H MUST output at least ceil(log2(r)) bits, where r is
   the order of the subgroups G1 and G2 defined by the pairing-friendly
   elliptic curve.
@@ -331,7 +482,7 @@ The core operations in this section depend on several parameters:
   When the signature variant is minimal-pubkey size, this function
   MUST output a point in G2.
   For security, this function MUST be either a random oracle encoding or a
-  nonuniform encoding, as defined in [I-D.hash-to-curve].
+  nonuniform encoding, as defined in [@!I-D.irtf-cfrg-hash-to-curve].
 
 In addition, the following primitives are determined by the above parameters:
 
@@ -742,10 +893,10 @@ In addition to the parameters required to instantiate the core operations
 
     For security, this function MUST be orthogonal to the hash\_to\_point function.
     In addition, this function MUST be either a random oracle encoding or a
-    nonuniform encoding, as defined in [I-D.hash-to-curve].
+    nonuniform encoding, as defined in [@!I-D.irtf-cfrg-hash-to-curve].
     The RECOMMENDED way of instantiating hash\_pubkey\_to\_point is to use
     the same hash-to-curve function as hash\_to\_point, with a
-    different domain separation tag (see [I-D.hash-to-curve], Section 5.1).
+    different domain separation tag (see [@!I-D.irtf-cfrg-hash-to-curve], Section 5.1).
 
 ### PopProve
 
@@ -830,7 +981,7 @@ Procedure:
 
 This section defines the format for a BLS ciphersuite.
 It also gives concrete ciphersuites based on the BLS12-381 pairing-friendly
-elliptic curve [I-D.pairing-friendly-curves].
+elliptic curve [@!I-D.yonezawa-pairing-friendly-curves].
 
 ## Ciphersuite format
 
@@ -865,13 +1016,13 @@ In particular, a ciphersuite comprises:
 
 - hash\_to\_point: a hash from arbitrary strings to elliptic curve points.
   It is RECOMMENDED that hash\_to\_point be defined in terms of a
-  hash-to-curve suite [I-D.hash-to-curve] with domain separation tag equal
+  hash-to-curve suite [@!I-D.irtf-cfrg-hash-to-curve] with domain separation tag equal
   to the ID string.
 
 - hash\_pubkey\_to\_point (only specified when SC is proof-of-possession):
   a hash from serialized public keys to elliptic curve points.
   It is RECOMMENDED that hash\_pubkey\_to\_point be defined in terms of a
-  has-to-curve suite [I-D.hash-to-curve], with domain separation tag
+  has-to-curve suite [@!I-D.irtf-cfrg-hash-to-curve], with domain separation tag
   constructed similarly to the ID string, namely:
 
     "BLS\_POP\_" || H2C\_SUITE || "\_" || SC\_TAG || "\_"
@@ -882,9 +1033,9 @@ The following ciphersuites are all built on the BLS12-381 elliptic curve.
 The required primitives for this curve are given in (#bls12381def).
 
 These ciphersuites use the hash-to-curve suites BLS12381G1-SHA256-SSWU-RO-
-and BLS12381G2-SHA256-SSWU-RO- defined in [I-D.hash-to-curve].
+and BLS12381G2-SHA256-SSWU-RO- defined in [@!I-D.irtf-cfrg-hash-to-curve].
 Each ciphersuite defines a unique hash\_to\_point function by specifying
-a domain separation tag (see [I-D.hash-to-curve, Section 5.1).
+a domain separation tag (see [@!I-D.irtf-cfrg-hash-to-curve, Section 5.1).
 
 ### Basic
 
@@ -1029,7 +1180,7 @@ curve SHOULD run in constant time.
 
 BLS signatures are deterministic. This protects against attacks
 arising from signing with bad randomness, for example, the nonce reuse
-attack on ECDSA [HDWH 12].
+attack on ECDSA [@HDWH12].
 
 As discussed in (#keygen), the IKM input to KeyGen MUST be infeasible
 to guess and MUST be kept secret.
@@ -1044,7 +1195,7 @@ as random oracles.
 It is crucial that these functions are implemented using a cryptographically
 secure hash function.
 For this purpose, implementations MUST meet the requirements of
-[I-D.hash-to-curve].
+[@!I-D.irtf-cfrg-hash-to-curve].
 
 In addition, ciphersuites MUST specify unique domain separation tags
 for hash\_to\_point and hash\_pubkey\_to\_point.
@@ -1095,7 +1246,7 @@ The ciphersuites in (#ciphersuites) are based upon the BLS12-381
 pairing-friendly elliptic curve.
 The following defines the correspondence between the primitives
 in (#definitions) and the parameters given in Section 4.2.2 of
-[I-D.pairing-friendly-curves].
+[@!I-D.yonezawa-pairing-friendly-curves].
 
 - E1, G1: the curve E and its order-r subgroup.
 
@@ -1108,15 +1259,13 @@ in (#definitions) and the parameters given in Section 4.2.2 of
 - P2: the point BP'.
 
 - e: the optimal Ate pairing defined in Appendix A of
-  [I-D.pairing-friendly-curves].
+  [@!I-D.yonezawa-pairing-friendly-curves].
 
 - point\_to\_octets and octets\_to\_point use the compressed
-  serialization formats for E1 and E2 defined by [ZCash].
+  serialization formats for E1 and E2 defined by [@!ZCash].
 
 - subgroup\_check MAY use either the naive check described
-  in (#definitions) or the optimized check given by [Bowe19].
-
-<!-- [ZCash](https://github.com/zkcrypto/pairing/blob/master/src/bls12_381/README.md). -->
+  in (#definitions) or the optimized check given by [@Bowe19].
 
 # Test Vectors
 
@@ -1125,132 +1274,17 @@ TBA: (i) test vectors for both variants of the signature scheme
 (signatures in G2 instead of G1) , (ii) test vectors ensuring
 membership checks, (iii) intermediate computations ctr, hm.
 
-<!---
-We generate test vectors for curve BLS12-381. The test vectors are in both raw form (as in octet strings)
-and mathematical form (as in field elements and group elements). The raw form may vary in
-different implementations due to encoding mechanisms.
+# Security analyses
 
+The security properties of the BLS signature scheme are proved in [@BLS01].
 
-The generator of G2 is set to P2 which is a string "93 e0 2b 60 52 71 9f 60 7d ac d3 a0 88 27 4f 65 59 6b d0 d0 99 20 b6 1a b5 da 61 bb dc 7f 50 49 33 4c f1 12 13 94 5d 57 e5 ac 7d 05 5d 04 2b 7e 02 4a a2 b2 f0 8f 0a 91 26 08 05 27 2d c5 10 51 c6 e4 7a d4 fa 40 3b 02 b4 51 0b 64 7a e3 d1 77 0b ac 03 26 a8 05 bb ef d4 80 56 c8 c1 21 bd b8"
+[@BGLS03] prove the security of aggregate signatures over distinct messages,
+as in the basic scheme of (#schemenul).
 
-that encodes a point whose projective form is
+[@BNN07] prove security of the message augmentation scheme of (#schemeaug).
 
-* x: Fq2 { c0: Fq(0x024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb8), c1: Fq(0x13e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e) },
-* y: Fq2 { c0: Fq(0x0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b82801), c1: Fq(0x0606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be) },
-* z: Fq2 { c0: Fq(0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001), c1: Fq(0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000) } }
+[@Bol03;@LOSSW06;@RY07] prove security of constructions related to the proof
+of possession scheme of (#schemepop).
 
-
-The key generation function performs the following steps to obtain a key pair:
-
-* input keyseed = "this is the input to a hash"
-
-* rngseed = SHA512-256(keyseed)
-
-* instantiate XorShiftRng from rngseed
-
-* generate a field element from XorShiftRng as the secret key
-sk = "7d 79 2c 3a 49 ca e9 8c 13 00 c0 c3 75 c1 41 fe 7b 57 07 58 a0 21 b9 01 fb 32 be 6b 67 7f bd a8"
-
-which encodes a field element "0xa8bd7f676bbe32fb01b921a05807577bfe41c175c3c000138ce9ca493a2c797d"
-
-* compute sk*P2 to obtain public key pk = "a4 e0 6b 85 fb da 53 db 3b a6 60 92 b7 7e 16 86 d6 d6 ca ac e3 79 3c 20 e3 7b 80 4e 50 94 5f b9 9c 10 08 83 72 b4 fb 6c 82 00 c4 21 fc 6c 8d c2 0c e4 29 ef 08 d7 c6 64 cb 24 7f e6 4a f7 34 fb ed d6 a6 28 14 97 34 5c a8 1d 17 17 b2 09 e1 26 54 9c d1 fd 98 fb 0c 13 5a 9d 71 6f 9f b5 4b b1"
-
-that encodes a point whose projective form is
-
-* x: Fq2 { c0: Fq(0x145caaad2e9c9d814b06c612cd5fd9149575c4d692fd729dff38a49bb5f41bdee8be0024acc57776c4954c6439cda90e), c1: Fq(0x159362e375b67aa84b32ebf200f225ca582f75e2b7227c859d84e490d7dbdc6b0a5271846ef1c3f8ca58f8ebb7e8047f) },
-* y: Fq2 { c0: Fq(0x18c53564406af055cd2cd1baf1abd8c1cc974c3bc0df8ccc8c123274af760f6a2856838dc0a033386b1abbf42fd97386), c1: Fq(0x04a13949876f767d334a98eb968bcffbf6b59b48ac316e53fb501f0598a4f5042802dc78aa51e2fd265ce35bc2295d99) },
-* z: Fq2 { c0: Fq(0x00fcb7858e1f18ad9b1a8032d369f9a8a022d5794d49c73f908ac3e40f5ab60b100ec022214636b0eb6fcec185c9341e), c1: Fq(0x139ae75a9781efdf8babcd047d2166d9a3044256d811b4e4449ad791fe795b95ee4d01f032aa45ccd33342c6eef41785) } }
-
-
-To sign a message message = "this is the message", the signing algorithm does the following:
-
-* instantiate the Hash_to_G1 algorithm with SHA512 using try-and-increment method
-* obtain hm = Hash_to_G1(message)
-* compute x*hm as signature = "b2 b8 e3 8d ec 47 f9 4a bb a7 c1 95 64 bd ad 96 0a 9f 42 43 8c f4 98 06 11 da 82 bb 78 d6 de 53 cc f2 3a 29 a8 e2 87 b0 9f ce 91 7a 28 17 8a f3"
-which encodes a point whose projective form is
-  * x: Fq(0x0f7e27fe139e0d2ad38b25e0d34cc1445fcfb9375d5a7078a87458a6a98224584199ec0197392ff08e0be368b452ad65),
-  * y: Fq(0x02424a69e9b6d9818fa99099f7f4fb56123587477bb1b992f478940b82cef401ff4bf96b77dec63826bf6c08addb08db),
-  * z: Fq(0x18e24c7f7b34aa5f03fcfb6eee8293a00479f8ce9aef6c7184ea2f0e6b73e059865a3222936281881598b7436181627d)
-
-To verify the signature with the public key and the message, the verification algorithm does the
-following:
-
-* instantiate the hash_to_G1 algorithm with SHA512 using try-and-increment method
-* obtain hm = hash_to_G1(message)
-* return pairing(hm, pk) ?= pairing(signature, P2)
-
-The verification algorithm should return true for the testing vectors in this section.
---->
-
-# Security
-
-## Definitions
-### Message Unforgeability
-
-Consider the following game between an adversary and a challenger.
-The challenger generates a key-pair (PK, SK) and gives PK to the adversary.
-The adversary may repeatedly query the challenger on any message message to obtain
-its corresponding signature signature. Eventually the adversary outputs a pair
-(message', signature').
-
-Unforgeability means no adversary can produce a pair (message', signature') for a message message' which he never queried the challenger and Verify(PK, message, signature) outputs VALID.
-
-
-### Strong Message Unforgeability
-
-In the strong unforgeability game, the game proceeds as above, except
-no adversary should be able to produce a pair (message', signature') that verifies (i.e. Verify(PK, message, signature)
-outputs VALID) given that he never queried the challenger on message', or if he did query and obtained
-a reply signature, then signature != signature'.
-
-More informally, the strong unforgeability means that no adversary can produce
-a different signature (not provided by the challenger) on a message which he queried before.
-
-### Aggregation Unforgeability
-
-Consider the following game between an adversary and a challenger.
-The challenger generates a key-pair (PK, SK) and gives PK to the adversary.
-The adversary may repeatedly query the challenger on any message message to obtain
-its corresponding signature signature.
-Eventually the adversary outputs a sequence ((PK\_1, message\_1), ..., (PK\_n, message\_n), (PK, message), signature).
-
-Aggregation unforgeability means that no adversary can produce a sequence
-where it did not query the challenger on the message message, and
-Verify-Aggregated((PK\_1, message\_1), ..., (PK\_n, message\_n), (PK, message), signature) outputs VALID.
-
-We note that aggregation unforgeability implies message unforgeability.
-
-TODO: We may also consider a strong aggregation unforgeability property.
-
-## Security analysis
-
-The BLS signature scheme achieves strong message unforgeability and aggregation
-unforgeability under the co-CDH
-assumption, namely that given P1, a \* P1, P2, b \* P2, it is hard to
-compute {ab} \* P1. [BLS01, BGLS03]
-
-
-# References
-
-[BLS 01] Dan Boneh, Ben Lynn, Hovav Shacham:
-Short Signatures from the Weil Pairing. ASIACRYPT 2001: 514-532.
-
-[BGLS 03] Dan Boneh, Craig Gentry, Ben Lynn, Hovav Shacham:
-Aggregate and Verifiably Encrypted Signatures from Bilinear Maps. EUROCRYPT 2003: 416-432.
-
-[HDWH 12]
-    Heninger, N., Durumeric, Z., Wustrow, E., Halderman, J.A.:
-    "Mining your Ps and Qs: Detection of widespread weak keys in network devices.",
-    USENIX 2012.
-
-[I-D.irtf-cfrg-hash-to-curve]
-    S. Scott, N. Sullivan, and C. Wood:
-    "Hashing to Elliptic Curves",
-    draft-irtf-cfrg-hash-to-curve-01 (work in progress),
-    July 2018.
-
-[I-D.pairing-friendly-curves]
-    S. Yonezawa, S. Chikara, T. Kobayashi, T. Saito:
-    "Pairing-Friendly Curves",
-    draft-yonezawa-pairing-friendly-curves-00,
-    Jan 2019.
+[@BDN18] prove the security of another rogue key defense; this
+defense is not standardized in this document.
