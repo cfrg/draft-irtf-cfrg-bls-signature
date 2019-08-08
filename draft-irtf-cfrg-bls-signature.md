@@ -320,15 +320,16 @@ The core operations in this section depend on several parameters:
 
 - H, a hash function H that MUST be a secure cryptographic hash function,
   e.g., SHA-256 [FIPS180-4].
-  H MUST output at least ceil(log2(r)) bits, where r is the order of the
-  subgroups G1 and G2 defined by the pairing-friendly elliptic curve.
+  For security, H MUST output at least ceil(log2(r)) bits, where r is
+  the order of the subgroups G1 and G2 defined by the pairing-friendly
+  elliptic curve.
 
 - hash\_to\_point, a function whose interface is described in (#definitions).
-  When instantiating the variant with minimal signature size, this function
+  When the signature variant is minimal-signature-size, this function
   MUST output a point in G1.
-  When instantiating the variant with minimal public key size, this function
+  When the signature variant is minimal-pubkey size, this function
   MUST output a point in G2.
-  For security, this function SHOULD be either a random oracle encoding or a
+  For security, this function MUST be either a random oracle encoding or a
   nonuniform encoding, as defined in [I-D.hash-to-curve].
 
 In addition, the following primitives are determined by the above parameters:
@@ -473,24 +474,23 @@ or more (message, PK) pairs.
 result = CoreVerify(PK, message, signature)
 
 Inputs:
-- PK is a public key in the format output by KeyGen.
-- message is an octet string.
-- signature is an octet string.
+- PK, a public key in the format output by KeyGen.
+- message, an octet string.
+- signature, an octet string in the format output by CoreSign.
 
 Outputs:
-- result, either VALID or INVALID
+- result, either VALID or INVALID.
 
 Procedure:
 1. R = signature_to_point(signature)
-2. xP = pubkey_to_point(PK)
-3. If R is INVALID, return INVALID
-4. If xP is INVALID, return INVALID
-5. If signature_subgroup_check(R) is INVALID, return INVALID
-6. If pubkey_subgroup_check(xP) is INVALID, return INVALID
-7. Q = hash_to_point(message)
-8. C1 = e(R, P)
-9. C2 = e(Q, xP)
-10. If C1 == C2, return VALID, else return INVALID
+2. If R is INVALID, return INVALID
+3. If signature_subgroup_check(R) is INVALID, return INVALID
+4. xP = pubkey_to_point(PK)
+5. If xP is INVALID, return INVALID
+6. Q = hash_to_point(message)
+7. C1 = pairing(Q, xP)
+8. C2 = pairing(R, P)
+9. If C1 == C2, return VALID, else return INVALID
 ~~~
 
 ## Aggregate
@@ -501,10 +501,12 @@ The Aggregate algorithm compresses multiple signatures into one.
 signature = Aggregate(signature_1, ..., signature_n)
 
 Inputs:
-- signature_1, ..., signature_n, signatures output by CoreSign.
+- signature_1, ..., signature_n, octet strings output by
+  either CoreSign or Aggregate.
 
 Outputs:
-- signature, a compressed signature combining all inputs, or INVALID
+- signature, an octet string encoding a compressed signature
+  that compbines all inputs; or INVALID.
 
 Procedure:
 1. accum = signature_to_point(signature_1)
@@ -517,8 +519,40 @@ Procedure:
 8. return signature
 ~~~
 
+## CoreAggregateVerify
+
+The CoreAggregateVerify algorithm checks an aggregated signature
+over several (PK, message) pairs.
+
+~~~
+result = CoreAggregateVerify((PK_1, message_1), ..., (PK_n, message_n),
+                             signature)
+
+Inputs:
+- PK_1, ..., PK_n, public keys in the format output by KeyGen.
+- message_i, ..., message_n, octet strings.
+- signature, an octet string output by Aggregate.
+
+Outputs:
+- result, either VALID or INVALID.
+
+Procedure:
+1. R = signature_to_point(signature)
+2. If R is INVALID, return INVALID
+3. If signature_subgroup_check(R) is INVALID, return INVALID
+4. C1 = 1 (the identity element in GT)
+5. for i in 1, ..., n:
+6.     xP = pubkey_to_point(PK_i)
+7.     If xP is INVALID, return INVALID
+8.     Q = hash_to_point(message_i)
+9.     C1 = C1 * pairing(Q, xP)
+10. C2 = pairing(R, P)
+11. If C1 == C2, return VALID, else return INVALID
+~~~
 
 # BLS Signatures {#schemes}
+
+
 
 # Ciphersuites {#ciphersuites}
 
