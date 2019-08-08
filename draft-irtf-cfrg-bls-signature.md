@@ -443,6 +443,26 @@ Procedure:
 7. return (PK, SK)
 ~~~
 
+## KeyValidate {#keyvalidate}
+
+The KeyValidate algorithm ensures that a public key is valid.
+
+~~~
+result = KeyValidate(PK)
+
+Inputs:
+- PK, a public key in the format output by KeyGen.
+
+Outputs:
+- result, either VALID or INVALID
+
+Procedure:
+1. xP = pubkey_to_point(PK)
+2. If xP is INVALID, return INVALID
+3. If pubkey_subgroup_check(xP) is INVALID, return INVALID
+4. return VALID
+~~~
+
 ## CoreSign {#coresign}
 
 The CoreSign algorithm computes a signature from SK, a secret key,
@@ -460,15 +480,17 @@ Outputs:
 
 Procedure:
 1. Q = hash_to_point(message)
-2. R = SK \* Q
-3. signature = point\_to\_signature(R)
+2. R = SK * Q
+3. signature = point_to_signature(R)
 4. return signature
 ~~~
 
 ## CoreVerify {#coreverify}
 
-The CoreVerify algorithm checks that a signature is valid for one
-or more (message, PK) pairs.
+The CoreVerify algorithm checks that a signature is valid for
+the octet string message under the public key PK.
+
+The public key PK must satisfy KeyValidate(PK) == VALID ((#keyvalidate)).
 
 ~~~
 result = CoreVerify(PK, message, signature)
@@ -486,11 +508,10 @@ Procedure:
 2. If R is INVALID, return INVALID
 3. If signature_subgroup_check(R) is INVALID, return INVALID
 4. xP = pubkey_to_point(PK)
-5. If xP is INVALID, return INVALID
-6. Q = hash_to_point(message)
-7. C1 = pairing(Q, xP)
-8. C2 = pairing(R, P)
-9. If C1 == C2, return VALID, else return INVALID
+5. Q = hash_to_point(message)
+6. C1 = pairing(Q, xP)
+7. C2 = pairing(R, P)
+8. If C1 == C2, return VALID, else return INVALID
 ~~~
 
 ## Aggregate
@@ -515,7 +536,7 @@ Procedure:
 4.     next = signature_to_point(signature_i)
 5.     If next is INVALID, return INVALID
 6.     accum = accum + next
-7. signature = point_to_octets(accum)
+7. signature = point_to_signature(accum)
 8. return signature
 ~~~
 
@@ -523,6 +544,9 @@ Procedure:
 
 The CoreAggregateVerify algorithm checks an aggregated signature
 over several (PK, message) pairs.
+
+All public keys PK\_i must satisfy KeyValidate(PK\_i) == VALID
+((#keyvalidate)).
 
 ~~~
 result = CoreAggregateVerify((PK_1, message_1), ..., (PK_n, message_n),
@@ -543,46 +567,41 @@ Procedure:
 4. C1 = 1 (the identity element in GT)
 5. for i in 1, ..., n:
 6.     xP = pubkey_to_point(PK_i)
-7.     If xP is INVALID, return INVALID
-8.     Q = hash_to_point(message_i)
-9.     C1 = C1 * pairing(Q, xP)
-10. C2 = pairing(R, P)
-11. If C1 == C2, return VALID, else return INVALID
+7.     Q = hash_to_point(message_i)
+8.     C1 = C1 * pairing(Q, xP)
+9. C2 = pairing(R, P)
+10. If C1 == C2, return VALID, else return INVALID
 ~~~
 
 # BLS Signatures {#schemes}
 
-This section defines three signature schemes that differ only in the way
-that they defend against rogue key attacks ((#definitions)).
+This section defines three signature schemes: basic, message augmentation,
+and proof of possession.
+These schemes differ in the ways that they defend against rogue key
+attacks ((#definitions)).
 
-- Basic: to defend against rogue key attacks, this scheme requires
-  all messages signed by any aggregate signature to be distinct.
+All of the schemes in this section are built on a set of core operations
+defined in (#coreops).
+Thus, defining a scheme requires fixing a set of parameters as
+defined in (#coreparams).
 
-- Message augmentation: in this scheme, signatures are generated
-  over the concatenation of the public key and the message.
-
-- Proof of possession: this scheme uses a separate public key
-  validation step, called a proof of possession, to defend against
-  rogue key attacks.
-  This enables an optimization to aggregate signature verification
-  for the case that all signatures are on the same message.
-
-All of the schemes in this section are built on the set of core operations
-defined in (#coreops), and uses the parameters and primitives described
-in (#coreparams).
-In addition, each scheme has two variants as discussed in (#corevariants).
-
-All three schemes expose the KeyGen and Aggregate operations defined in (#coreops).
-The sections below define the other API functions ((#blsapi)) for each scheme.
+All three schemes expose the KeyGen and Aggregate operations
+that are defined in (#coreops).
+The sections below define the other API functions ((#blsapi))
+for each scheme.
 
 ## Basic scheme {#schemenul}
 
-In the basic scheme, the Sign function is identical to CoreSign
-and the Verify function is identical to CoreVerify ((#coreops)).
+In a basic scheme, rogue key attacks are handled by requiring
+all messages signed by an aggregate signature to be distinct.
+This requirement is enforced in the definition of AggregateVerify.
+
+The Sign and Verify functions are identical to CoreSign and
+CoreVerify ((#coreops)), respectively.
 AggregateVerify is defined below.
 
-All public keys used by Verify and AggregateVerify MUST be validated
-as described in (#pubkeyvalid).
+All public keys PK supplied as arguments to Verify and AggregateVerify
+MUST satisfy KeyValidate(PK) == VALID ((#keyvalidate)).
 
 ### AggregateVerify
 
@@ -609,11 +628,13 @@ Procedure:
 
 ## Message augmentation {#schemeaug}
 
-In the message augmentation scheme, Sign, Verify, and AggregateVerify
-prepend the public key to the messages being signed or verified.
+In a message augmentation scheme, signatures are generated
+over the concatenation of the public key and the message,
+ensuring that messages signed by different public keys are
+distinct.
 
-All public keys used by Verify and AggregateVerify MUST be validated
-as described in (#pubkeyvalid).
+All public keys PK supplied as arguments to Verify and AggregateVerify
+MUST satisfy KeyValidate(PK) == VALID ((#keyvalidate)).
 
 ### Sign
 
@@ -629,18 +650,17 @@ defined in (#coreparams).
 signature = Sign(SK, message)
 
 Inputs:
-- SK, the secret key output by an invocation of KeyGen.
+- SK, a secret key output by an invocation of KeyGen.
 - message, an octet string.
 
 Outputs:
 - signature, an octet string.
 
 Procedure:
-1. xP = point_to_pubkey(SK * P)
+1. xP = SK * P
 2. PK = point_to_pubkey(xP)
 3. return CoreSign(SK, PK || message)
 ~~~
-
 
 ### Verify
 
@@ -658,7 +678,6 @@ Outputs:
 Procedure:
 1. return CoreVerify(PK, PK || message, signature)
 ~~~
-
 
 ### AggregateVerify
 
@@ -681,10 +700,130 @@ Procedure:
                               signature)
 ~~~
 
-
 ## Proof of possession {#schemepop}
 
 
+A proof of possession scheme uses a separate public key
+validation step, called a proof of possession, to defend against
+rogue key attacks.
+This enables an optimization to aggregate signature verification
+for the case that all signatures are on the same message.
+
+The Sign, Verify, and AggregateVerify functions
+are identical to CoreSign, CoreVerify, and CoreAggregateVerify
+((#coreops)), respectively.
+In addition, a proof of possession scheme defines three functions beyond
+the standard API ((#blsapi)):
+
+- PopProve(SK) -> proof: an algorithm that generates a proof of possession
+  for the public key corresponding to secret key SK.
+
+- PopVerify(PK, proof) -> VALID or INVALID:
+  an algorithm that outputs VALID if proof is valid for PK, and INVALID otherwise.
+
+- FastAggregateVerify(PK\_1, ..., PK\_n, message, signature) -> VALID or INVALID:
+  a verification algorithm for the aggregate of multiple signatures on
+  the same message.
+  This function is faster than AggregateVerify.
+
+All public keys used by Verify, AggregateVerify, and FastAggregateVerify
+MUST be accompanied by a proof of possession generated by PopProve,
+and the result of PopVerify on this proof MUST be VALID.
+
+### Parameters {#popparams}
+
+In addition to the parameters required to instantiate the core operations
+((#coreparams)), a proof of possession scheme requires one further parameter:
+
+- hash\_pubkey\_to\_point(PK) -> P: a cryptographic hash function that takes as
+  input a public key and outputs a point in the same subgroup as the
+  hash\_to\_point algorithm used to instantiate the core operations.
+
+    For security, this function MUST be orthogonal to the hash\_to\_point function.
+    In addition, this function MUST be either a random oracle encoding or a
+    nonuniform encoding, as defined in [I-D.hash-to-curve].
+    The RECOMMENDED way of instantiating hash\_pubkey\_to\_point is to use
+    the same hash-to-curve function as hash\_to\_point, with a
+    different domain separation tag (see [I-D.hash-to-curve], Section 5.1).
+
+### PopProve
+
+This function recomputes the public key coresponding to the input SK.
+Implementations MAY instead implement an interface that takes the
+public key as input.
+
+Note that the point P and the point\_to\_pubkey and point\_to\_signature
+functions are defined in (#coreparams).
+The hash\_pubkey\_to\_point function is defined in (#popparams).
+
+~~~
+proof = PopProve(SK)
+
+Inputs:
+- SK, a secret key output by an invocation of KeyGen.
+
+Outputs:
+- proof, an octet string.
+
+Procedure:
+1. xP = SK * P
+2. PK = point_to_pubkey(xP)
+3. Q = hash_pubkey_to_point(PK)
+4. R = SK * Q
+5. proof = point_to_signature(R)
+6. return signature
+~~~
+
+### PopVerify
+
+Note that the following uses several functions defined in (#coreops).
+The hash\_pubkey\_to\_point function is defined in (#popparams).
+
+~~~
+result = PopVerify(PK, proof)
+
+Inputs:
+- PK, a public key inthe format output by KeyGen.
+- proof, an octet string in the format output by PopProve.
+
+Outputs:
+- result, either VALID or INVALID
+
+Procedure:
+1. R = signature_to_point(proof)
+2. If R is INVALID, return INVALID
+3. If signature_subgroup_check(R) is INVALID, return INVALID
+4. If KeyValidate(PK) is INVALID, return INVALID
+5. xP = pubkey_to_point(PK)
+6. Q = hash_pubkey_to_point(PK)
+7. C1 = pairing(Q, xP)
+8. C2 = pairing(R, P)
+9. If C1 == C2, return VALID, else return INVALID
+~~~
+
+### FastAggregateVerify
+
+Note that the following uses several functions defined in (#coreops).
+
+~~~
+result = FastAggregateVerify(PK_1, ..., PK_n, message, signature)
+
+Inputs:
+- PK_1, ..., PK_n, public keys in the format output by KeyGen.
+- message, an octet string.
+- signature, an octet string output by Aggregate.
+
+Outputs:
+- result, either VALID or INVALID.
+
+Procedure:
+1. accum = pubkey_to_point(PK_1)
+2. for i in 2, ..., n:
+3.     next = pubkey_to_point(PK_i)
+4.     accum = accum + next
+5. PK = point_to_pubkey(accum)
+6. return CoreVerify(PK, message, signature)
+~~~
 
 # Ciphersuites {#ciphersuites}
 
