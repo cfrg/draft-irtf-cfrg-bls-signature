@@ -543,15 +543,15 @@ In addition, the following primitives are determined by the above parameters:
 
   - For minimal-signature-size:
 
-        pubkey\_subgroup\_check(ostr) := subgroup\_check\_E2(ostr)
+        pubkey\_subgroup\_check(P) := subgroup\_check\_E2(P)
 
-        signature\_subgroup\_check(ostr) := subgroup\_check\_E1(ostr)
+        signature\_subgroup\_check(P) := subgroup\_check\_E1(P)
 
   - For minimal-pubkey-size:
 
-        pubkey\_subgroup\_check(ostr) := subgroup\_check\_E1(ostr)
+        pubkey\_subgroup\_check(P) := subgroup\_check\_E1(P)
 
-        signature\_subgroup\_check(ostr) := subgroup\_check\_E2(ostr)
+        signature\_subgroup\_check(P) := subgroup\_check\_E2(P)
 
 ##  KeyGen {#keygen}
 
