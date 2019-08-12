@@ -229,12 +229,10 @@ organization="Algorand"
 .# Abstract
 
 
-BLS is a digital signature scheme with compression properties.
-With a given set of signatures (signature\_1, ..., signature\_n) anyone can produce
-a compressed signature signature\_compressed. The same is true for a set of
-secret keys or public keys, while keeping the connection between sets
-(i.e., a compressed public key is associated to its compressed secret key).
-Furthermore, the BLS signature scheme is deterministic, non-malleable,
+BLS is a digital signature scheme with aggregation properties.
+Given set of signatures (signature\_1, ..., signature\_n) anyone can produce
+an aggregated signature. Aggregation is can also be done on secret keys and
+public keys. Furthermore, the BLS signature scheme is deterministic, non-malleable,
 and efficient. Its simplicity and cryptographic properties allows it
 to be useful in a variety of use-cases, specifically when minimal
 storage space or bandwidth are required.
@@ -260,8 +258,8 @@ of important efficiency properties:
 
 1. The public key and the signatures are encoded as single group elements.
 1. Verification requires 2 pairing operations.
-1. A collection of signatures (signature\_1, ..., signature\_n) can be compressed
-into a single signature (signature). Moreover, the compressed signature can
+1. A collection of signatures (signature\_1, ..., signature\_n) can be aggregated
+into a single signature (signature). Moreover, the aggregate signature can
 be verified using only n+1 pairings (as opposed to 2n pairings, when verifying
 n signatures separately).
 
@@ -269,17 +267,17 @@ Given the above properties,
 the scheme enables many interesting applications.
 The immediate applications include
 
-* authentication and integrity for Public Key Infrastructure (PKI) and blockchains.
+* Authentication and integrity for Public Key Infrastructure (PKI) and blockchains.
 
-  * The usage is similar to classical digital signatures, such as ECDSA.
+   * The usage is similar to classical digital signatures, such as ECDSA.
 
-*  compressing signature chains for PKI and  Secure Border Gateway Protocol (SBGP).
+* Aggregating signature chains for PKI and Secure Border Gateway Protocol (SBGP).
 
    * Concretely, in a PKI signature chain of depth n, we have n signatures by n
 certificate authorities on n distinct certificates. Similarly, in SBGP,
 each router receives a list of n signatures attesting to a path of length n
 in the network. In both settings, using the BLS signature scheme would allow us
-to compress the n signatures into a single signature.
+to aggregate the n signatures into a single signature.
 
 * consensus protocols for blockchains.
 
@@ -302,8 +300,8 @@ In terms of sizes, ECDSA uses 32 bytes for public keys and  64 bytes for signatu
 while BLS uses 96 bytes for public keys, and  48 bytes for signatures.
 Alternatively, BLS can also be instantiated with 48 bytes of public keys and 96 bytes
 of signatures.
-BLS also allows for signature compression. In other words, a single signature is
-sufficient to anthenticate multiple messages and public keys.
+BLS also allows for signature aggregation. In other words, a single signature is
+sufficient to authenticate multiple messages and public keys.
 
 
 ## Organization of this document
@@ -421,7 +419,7 @@ The BLS signature scheme defines the following API:
   signature of message under public key PK, and INVALID otherwise.
 
 * Aggregate(signature\_1, ..., signature\_n) -> signature:
-  an aggregation algorithm that compresses a collection of signatures
+  an aggregation algorithm that aggregates a collection of signatures
   into a single signature.
 
 * AggregateVerify((PK\_1, message\_1), ..., (PK\_n, message\_n), signature) -> VALID or INVALID:
@@ -668,7 +666,7 @@ Procedure:
 
 ## Aggregate
 
-The Aggregate algorithm compresses multiple signatures into one.
+The Aggregate algorithm aggregates multiple signatures into one.
 
 ~~~
 signature = Aggregate(signature_1, ..., signature_n)
@@ -678,17 +676,17 @@ Inputs:
   either CoreSign or Aggregate.
 
 Outputs:
-- signature, an octet string encoding a compressed signature
+- signature, an octet string encoding a aggregated signature
   that combines all inputs; or INVALID.
 
 Procedure:
-1. accum = signature_to_point(signature_1)
-2. If accum is INVALID, return INVALID
+1. aggregate = signature_to_point(signature_1)
+2. If aggregate is INVALID, return INVALID
 3. for i in 2, ..., n:
 4.     next = signature_to_point(signature_i)
 5.     If next is INVALID, return INVALID
-6.     accum = accum + next
-7. signature = point_to_signature(accum)
+6.     aggregate = aggregate + next
+7. signature = point_to_signature(aggregate)
 8. return signature
 ~~~
 
@@ -923,7 +921,7 @@ Procedure:
 3. Q = hash_pubkey_to_point(PK)
 4. R = SK * Q
 5. proof = point_to_signature(R)
-6. return signature
+6. return proof
 ~~~
 
 ### PopVerify
@@ -969,11 +967,11 @@ Outputs:
 - result, either VALID or INVALID.
 
 Procedure:
-1. accum = pubkey_to_point(PK_1)
+1. aggregate = pubkey_to_point(PK_1)
 2. for i in 2, ..., n:
 3.     next = pubkey_to_point(PK_i)
-4.     accum = accum + next
-5. PK = point_to_pubkey(accum)
+4.     aggregate = aggregate + next
+5. PK = point_to_pubkey(aggregate)
 6. return CoreVerify(PK, message, signature)
 ~~~
 
@@ -1022,7 +1020,7 @@ In particular, a ciphersuite comprises:
 - hash\_pubkey\_to\_point (only specified when SC is proof-of-possession):
   a hash from serialized public keys to elliptic curve points.
   It is RECOMMENDED that hash\_pubkey\_to\_point be defined in terms of a
-  has-to-curve suite [@I-D.irtf-cfrg-hash-to-curve], with domain separation tag
+  hash-to-curve suite [@I-D.irtf-cfrg-hash-to-curve], with domain separation tag
   constructed similarly to the ID string, namely:
 
     "BLS\_POP\_" || H2C\_SUITE || "\_" || SC\_TAG || "\_"
@@ -1206,22 +1204,22 @@ The domain separation tag format used in (#ciphersuites) is the RECOMMENDED one.
 This section will be removed in the final version of the draft.
 There are currently several implementations of BLS signatures using the BLS12-381 curve.
 
-* Algorand: [bls\_sigs\_ref](https://github.com/kwantam/bls_sigs_ref)
+* Algorand: [bls\_sigs\_ref](https://github.com/kwantam/bls_sigs_ref).
 
 * Chia: [spec](https://github.com/Chia-Network/bls-signatures/blob/master/SPEC.md)
-[python/C++](https://github.com/Chia-Network/bls-signatures). Here, they are
+[python/C++](https://github.com/Chia-Network/bls-signatures).  Here, they are
 swapping G1 and G2 so that the public keys are small, and the benefits
 of avoiding a membership check during signature verification would even be more
-substantial. The current implementation does not seem to implement the membership check.
+substantial.  The current implementation does not seem to implement the membership check.
 Chia uses the Fouque-Tibouchi hashing to the curve, which can be done in constant time.
 
 * Dfinity: [go](https://github.com/dfinity/go-dfinity-crypto) [BLS](https://github.com/dfinity/bls).  The current implementations do not seem to implement the membership check.
 
-* Ethereum 2.0: [spec](https://github.com/ethereum/eth2.0-specs/blob/master/specs/bls_signature.md)
+* Ethereum 2.0: [spec](https://github.com/ethereum/eth2.0-specs/blob/master/specs/bls_signature.md).
 
 # Related Standards
 
-* Pairing-friendly curves [draft-yonezawa-pairing-friendly-curves](https://tools.ietf.org/html/draft-yonezawa-pairing-friendly-curves-00)
+* Pairing-friendly curves [draft-yonezawa-pairing-friendly-curves](https://tools.ietf.org/html/draft-yonezawa-pairing-friendly-curves-00).
 
 * Pairing-based Identity-Based Encryption [IEEE 1363.3](https://ieeexplore.ieee.org/document/6662370).
 
@@ -1229,7 +1227,7 @@ Chia uses the Fouque-Tibouchi hashing to the curve, which can be done in constan
 
 * Hashing to Elliptic Curves [draft-irtf-cfrg-hash-to-curve-04](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-02), in order to implement the hash function hash\_to\_point.
 
-* EdDSA [rfc8032](https://tools.ietf.org/html/rfc8032)
+* EdDSA [rfc8032](https://tools.ietf.org/html/rfc8032).
 
 
 
