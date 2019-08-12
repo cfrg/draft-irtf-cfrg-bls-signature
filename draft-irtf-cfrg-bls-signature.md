@@ -357,7 +357,7 @@ The following notation and primitives are used:
 
   - G1, G2: subgroups of E1 and E2 (respectively) having prime order r.
 
-  - P1, P2: distinguished points that generate of G1 and G2, respectively.
+  - P1, P2: distinguished points that generate G1 and G2, respectively.
 
   - GT: a subgroup, of prime order r, of the multiplicative group of a field extension.
 
@@ -470,7 +470,7 @@ The core operations in this section depend on several parameters:
 - A pairing-friendly elliptic curve, plus associated functionality
   given in (#definitions).
 
-- H, a hash function H that MUST be a secure cryptographic hash function,
+- H, a hash function that MUST be a secure cryptographic hash function,
   e.g., SHA-256 [@FIPS180-4].
   For security, H MUST output at least ceil(log2(r)) bits, where r is
   the order of the subgroups G1 and G2 defined by the pairing-friendly
@@ -1003,6 +1003,7 @@ In particular, a ciphersuite comprises:
     - SC\_TAG SHOULD be "NUL" when SC is basic,
     "AUG" when SC is message-augmentation, or
     "POP" when SC is proof-of-possession.
+    Other values SHOULD NOT be used.
 
 - SC: the scheme, either basic, message-augmentation, or proof-of-possession.
 
@@ -1022,7 +1023,7 @@ In particular, a ciphersuite comprises:
 - hash\_pubkey\_to\_point (only specified when SC is proof-of-possession):
   a hash from serialized public keys to elliptic curve points.
   It is RECOMMENDED that hash\_pubkey\_to\_point be defined in terms of a
-  has-to-curve suite [@I-D.irtf-cfrg-hash-to-curve], with domain separation tag
+  hash-to-curve suite [@I-D.irtf-cfrg-hash-to-curve], with domain separation tag
   constructed similarly to the ID string, namely:
 
     "BLS\_POP\_" || H2C\_SUITE || "\_" || SC\_TAG || "\_"
@@ -1164,6 +1165,8 @@ This check is REQUIRED of conforming implementations, for two reasons.
 2. Even if the pairing operation behaves properly on inputs that are outside
    the correct subgroups, skipping the subgroup check breaks the strong
    unforgeability property.
+
+<!-- TODO(RSW): add definition or link for strong unforgeability -->
 
 ## Side channel attacks
 
