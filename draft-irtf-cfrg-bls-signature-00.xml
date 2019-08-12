@@ -441,7 +441,7 @@ Inputs:
 
 Outputs:
 - signature, an octet string encoding a compressed signature
-  that compbines all inputs; or INVALID.
+  that combines all inputs; or INVALID.
 
 Procedure:
 1. accum = signature_to_point(signature_1)
@@ -690,7 +690,7 @@ The hash_pubkey_to_point function is defined in <xref target="popparams"></xref>
 <figure><artwork>result = PopVerify(PK, proof)
 
 Inputs:
-- PK, a public key inthe format output by KeyGen.
+- PK, a public key in the format output by KeyGen.
 - proof, an octet string in the format output by PopProve.
 
 Outputs:
@@ -934,7 +934,7 @@ arising from signing with bad randomness, for example, the nonce reuse
 attack on ECDSA <xref target="HDWH12"></xref>.</t>
 <t>As discussed in <xref target="keygen"></xref>, the IKM input to KeyGen MUST be infeasible
 to guess and MUST be kept secret.
-One possibility is to generate IKM from a trusted source of randonmess.
+One possibility is to generate IKM from a trusted source of randomness.
 Guidelines on constructing such a source are outside the scope of this
 document.</t>
 </section>
@@ -991,6 +991,7 @@ Chia uses the Fouque-Tibouchi hashing to the curve, which can be done in constan
 
 <back>
 <references title="Normative References">
+<?rfc include="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"?>
 <reference anchor="ZCash" target="https://github.com/zkcrypto/pairing/blob/master/src/bls12_381/README.md#serialization">
   <front>
     <title>BLS12-381</title>
@@ -1000,27 +1001,8 @@ Chia uses the Fouque-Tibouchi hashing to the curve, which can be done in constan
     <date year="2017" month="July"></date>
   </front>
 </reference>
-<?rfc include="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"?>
 </references>
 <references title="Informative References">
-<reference anchor="BGLS03" target="https://link.springer.com/chapter/10.1007%2F3-540-39200-9_26">
-  <front>
-    <title>Aggregate and verifiably encrypted signatures from bilinear maps</title>
-    <author fullname="Dan Boneh" initials="D." surname="Boneh">
-      <organization>Stanford University</organization>
-    </author>
-    <author fullname="Craig Gentry" initials="C." surname="Gentry">
-      <organization>Stanford University</organization>
-    </author>
-    <author fullname="Ben Lynn" initials="B." surname="Lynn">
-      <organization>Stanford University</organization>
-    </author>
-    <author fullname="Hovav Shacham" initials="H." surname="Shacham">
-      <organization>Stanford University</organization>
-    </author>
-    <date year="2003" month="May"></date>
-  </front>
-</reference>
 <reference anchor="Bol03" target="https://link.springer.com/chapter/10.1007%2F3-540-36288-6_3">
   <front>
     <title>Threshold Signatures, Multisignatures and Blind Signatures Based on the Gap-Diffie-Hellman-Group Signature Scheme</title>
@@ -1028,49 +1010,6 @@ Chia uses the Fouque-Tibouchi hashing to the curve, which can be done in constan
       <organization>University of California, San Diego</organization>
     </author>
     <date year="2003" month="January"></date>
-  </front>
-</reference>
-<reference anchor="Bowe19" target="https://eprint.iacr.org/2019/814">
-  <front>
-    <title>Faster subgroup checks for BLS12-381</title>
-    <author fullname="Sean Bowe" initials="S." surname="Bowe">
-      <organization>Electric Coin Company</organization>
-    </author>
-    <date year="2019" month="July"></date>
-  </front>
-</reference>
-<?rfc include="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.8017.xml"?>
-<reference anchor="HDWH12" target="https://www.usenix.org/system/files/conference/usenixsecurity12/sec12-final228.pdf">
-  <front>
-    <title>Mining your Ps and Qs: Detection of widespread weak keys in network devices</title>
-    <author fullname="Nadia Heninger" initials="N." surname="Heninger">
-      <organization>University of California, San Diego</organization>
-    </author>
-    <author fullname="Zakir Durumeric" initials="Z." surname="Durumeric">
-      <organization>The University of Michigan</organization>
-    </author>
-    <author fullname="Eric Wustrow" initials="E." surname="Wustrow">
-      <organization>The University of Michigan</organization>
-    </author>
-    <author fullname="J. Alex Halderman" initials="J.A." surname="Halderman">
-      <organization>The University of Michigan</organization>
-    </author>
-    <date year="2012" month="August"></date>
-  </front>
-</reference>
-<reference anchor="BNN07" target="https://link.springer.com/chapter/10.1007%2F978-3-540-73420-8_37">
-  <front>
-    <title>Unrestricted aggregate signatures</title>
-    <author fullname="Mihir Bellare" initials="M." surname="Bellare">
-      <organization>University of California, San Diego</organization>
-    </author>
-    <author fullname="Chanathip Namprepre" initials="C." surname="Namprempre">
-      <organization>Thammasat University</organization>
-    </author>
-    <author fullname="Gregory Neven" initials="G." surname="Neven">
-      <organization>Katholieke Universiteit Leuven</organization>
-    </author>
-    <date year="2007" month="July"></date>
   </front>
 </reference>
 <reference anchor="BDN18" target="https://link.springer.com/chapter/10.1007/978-3-030-03329-3_15">
@@ -1088,6 +1027,16 @@ Chia uses the Fouque-Tibouchi hashing to the curve, which can be done in constan
     <date year="2018" month="December"></date>
   </front>
 </reference>
+<reference anchor="Bowe19" target="https://eprint.iacr.org/2019/814">
+  <front>
+    <title>Faster subgroup checks for BLS12-381</title>
+    <author fullname="Sean Bowe" initials="S." surname="Bowe">
+      <organization>Electric Coin Company</organization>
+    </author>
+    <date year="2019" month="July"></date>
+  </front>
+</reference>
+<?rfc include="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5869.xml"?>
 <?rfc include="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.yonezawa-pairing-friendly-curves.xml"?>
 <reference anchor="FIPS180-4" target="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf">
   <front>
@@ -1098,32 +1047,19 @@ Chia uses the Fouque-Tibouchi hashing to the curve, which can be done in constan
     <date year="2015" month="August"></date>
   </front>
 </reference>
-<reference anchor="RY07" target="https://link.springer.com/chapter/10.1007%2F978-3-540-72540-4_13">
+<reference anchor="BNN07" target="https://link.springer.com/chapter/10.1007%2F978-3-540-73420-8_37">
   <front>
-    <title>The Power of Proofs-of-Possession: Securing Multiparty Signatures against Rogue-Key Attacks</title>
-    <author fullname="Thomas Ristenpart" initials="T." surname="Ristenpart">
+    <title>Unrestricted aggregate signatures</title>
+    <author fullname="Mihir Bellare" initials="M." surname="Bellare">
       <organization>University of California, San Diego</organization>
     </author>
-    <author fullname="Scott Yilek" initials="S." surname="Yilek">
-      <organization>University of California, San Diego</organization>
+    <author fullname="Chanathip Namprepre" initials="C." surname="Namprempre">
+      <organization>Thammasat University</organization>
     </author>
-    <date year="2007" month="May"></date>
-  </front>
-</reference>
-<?rfc include="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5869.xml"?>
-<reference anchor="BLS01" target="https://www.iacr.org/archive/asiacrypt2001/22480516.pdf">
-  <front>
-    <title>Short signatures from the Weil pairing</title>
-    <author fullname="Dan Boneh" initials="D." surname="Boneh">
-      <organization>Stanford University</organization>
+    <author fullname="Gregory Neven" initials="G." surname="Neven">
+      <organization>Katholieke Universiteit Leuven</organization>
     </author>
-    <author fullname="Ben Lynn" initials="B." surname="Lynn">
-      <organization>Stanford University</organization>
-    </author>
-    <author fullname="Hovav Shacham" initials="H." surname="Shacham">
-      <organization>Stanford University</organization>
-    </author>
-    <date year="2001" month="December"></date>
+    <date year="2007" month="July"></date>
   </front>
 </reference>
 <reference anchor="LOSSW06" target="https://link.springer.com/chapter/10.1007/11761679_28">
@@ -1148,6 +1084,70 @@ Chia uses the Fouque-Tibouchi hashing to the curve, which can be done in constan
   </front>
 </reference>
 <?rfc include="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.irtf-cfrg-hash-to-curve.xml"?>
+<reference anchor="HDWH12" target="https://www.usenix.org/system/files/conference/usenixsecurity12/sec12-final228.pdf">
+  <front>
+    <title>Mining your Ps and Qs: Detection of widespread weak keys in network devices</title>
+    <author fullname="Nadia Heninger" initials="N." surname="Heninger">
+      <organization>University of California, San Diego</organization>
+    </author>
+    <author fullname="Zakir Durumeric" initials="Z." surname="Durumeric">
+      <organization>The University of Michigan</organization>
+    </author>
+    <author fullname="Eric Wustrow" initials="E." surname="Wustrow">
+      <organization>The University of Michigan</organization>
+    </author>
+    <author fullname="J. Alex Halderman" initials="J.A." surname="Halderman">
+      <organization>The University of Michigan</organization>
+    </author>
+    <date year="2012" month="August"></date>
+  </front>
+</reference>
+<reference anchor="BLS01" target="https://www.iacr.org/archive/asiacrypt2001/22480516.pdf">
+  <front>
+    <title>Short signatures from the Weil pairing</title>
+    <author fullname="Dan Boneh" initials="D." surname="Boneh">
+      <organization>Stanford University</organization>
+    </author>
+    <author fullname="Ben Lynn" initials="B." surname="Lynn">
+      <organization>Stanford University</organization>
+    </author>
+    <author fullname="Hovav Shacham" initials="H." surname="Shacham">
+      <organization>Stanford University</organization>
+    </author>
+    <date year="2001" month="December"></date>
+  </front>
+</reference>
+<reference anchor="BGLS03" target="https://link.springer.com/chapter/10.1007%2F3-540-39200-9_26">
+  <front>
+    <title>Aggregate and verifiably encrypted signatures from bilinear maps</title>
+    <author fullname="Dan Boneh" initials="D." surname="Boneh">
+      <organization>Stanford University</organization>
+    </author>
+    <author fullname="Craig Gentry" initials="C." surname="Gentry">
+      <organization>Stanford University</organization>
+    </author>
+    <author fullname="Ben Lynn" initials="B." surname="Lynn">
+      <organization>Stanford University</organization>
+    </author>
+    <author fullname="Hovav Shacham" initials="H." surname="Shacham">
+      <organization>Stanford University</organization>
+    </author>
+    <date year="2003" month="May"></date>
+  </front>
+</reference>
+<reference anchor="RY07" target="https://link.springer.com/chapter/10.1007%2F978-3-540-72540-4_13">
+  <front>
+    <title>The Power of Proofs-of-Possession: Securing Multiparty Signatures against Rogue-Key Attacks</title>
+    <author fullname="Thomas Ristenpart" initials="T." surname="Ristenpart">
+      <organization>University of California, San Diego</organization>
+    </author>
+    <author fullname="Scott Yilek" initials="S." surname="Yilek">
+      <organization>University of California, San Diego</organization>
+    </author>
+    <date year="2007" month="May"></date>
+  </front>
+</reference>
+<?rfc include="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.8017.xml"?>
 </references>
 
 <section anchor="bls12381def" title="BLS12-381">
