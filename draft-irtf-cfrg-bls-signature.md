@@ -679,7 +679,7 @@ Inputs:
 
 Outputs:
 - signature, an octet string encoding a compressed signature
-  that compbines all inputs; or INVALID.
+  that combines all inputs; or INVALID.
 
 Procedure:
 1. accum = signature_to_point(signature_1)
@@ -935,7 +935,7 @@ The hash\_pubkey\_to\_point function is defined in (#popparams).
 result = PopVerify(PK, proof)
 
 Inputs:
-- PK, a public key inthe format output by KeyGen.
+- PK, a public key in the format output by KeyGen.
 - proof, an octet string in the format output by PopProve.
 
 Outputs:
@@ -1184,7 +1184,7 @@ attack on ECDSA [@HDWH12].
 
 As discussed in (#keygen), the IKM input to KeyGen MUST be infeasible
 to guess and MUST be kept secret.
-One possibility is to generate IKM from a trusted source of randonmess.
+One possibility is to generate IKM from a trusted source of randomness.
 Guidelines on constructing such a source are outside the scope of this
 document.
 
