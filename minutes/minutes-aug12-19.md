@@ -39,9 +39,9 @@ discussion to be continued on Telegram channel
 ------
 Justin: quantum safe back up - a master seed to derive both a seed for bls sk and a seed for Hash-based signatures
 
-Bram: hash the sk; reveal the sk, and generate a zk proof between the hash(sk) and the sk
+Bram: hash a seed to the sk; reveal the sk, and generate a zk proof between the seed and the sk
 
-Justin & bram: discussion on quantum apocalypse. Discussion to be continued on Telegram channel
+Justin & Bram: discussion on mitigations against quantum apocalypse. Discussion to be continued on Telegram channel
 
 
 Sergey: Is there a good implementation of Lamport signature?
