@@ -231,7 +231,7 @@ organization="Algorand"
 
 BLS is a digital signature scheme with aggregation properties.
 Given set of signatures (signature\_1, ..., signature\_n) anyone can produce
-an aggregated signature. Aggregation is can also be done on secret keys and
+an aggregated signature. Aggregation can also be done on secret keys and
 public keys. Furthermore, the BLS signature scheme is deterministic, non-malleable,
 and efficient. Its simplicity and cryptographic properties allows it
 to be useful in a variety of use-cases, specifically when minimal
