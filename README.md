@@ -8,7 +8,7 @@ The repo is maintained by a working group aiming to standardize BLS signature sc
 * [Hash to curve draft](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-04)
 * Current reference implementations:
   * https://github.com/kwantam/bls_sigs_ref
-  * https://github.com/sigp/milagro_bls/
+  * https://github.com/sigp/milagro_bls/tree/experimental
   * https://github.com/hyperledger/ursa/blob/master/libursa/src/bls/mod.rs
   * https://github.com/mikelodder7/bls12-381-comparison
 
@@ -23,7 +23,7 @@ Minor advancement are released through subversions, for example, version [0.1](h
 ## Reference implementations
 https://github.com/kwantam/bls_sigs_ref
 and
-https://github.com/sigp/milagro_bls/
+https://github.com/sigp/milagro_bls/tree/experimental
 
 
 ## Comments and feedbacks
