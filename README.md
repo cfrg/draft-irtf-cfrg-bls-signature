@@ -9,7 +9,7 @@ This repo was moved from [here](https://github.com/pairingwg/bls_standard).
 * Major updates since [last version](https://datatracker.ietf.org/doc/draft-boneh-bls-signature/):
   * Changed serialization methods
   * Use HKDF to derive keys
-  * Use hash to curve/group methods from Hash to curve draft(https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-04)
+  * Use hash to curve/group methods from [Hash to curve draft](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-04)
 
 ## Useful links:
 * Pairing draft: [stable](https://datatracker.ietf.org/doc/draft-yonezawa-pairing-friendly-curves/), [dev](https://github.com/pairingwg/pfc_standard)
