@@ -18,16 +18,6 @@ organization="Stanford University"
   city = ""
   country = "USA"
 [[author]]
-initials="R."
-surname="Wahby"
-fullname="Riad S. Wahby"
-organization="Stanford University"
- [author.address]
- email = "rsw@cs.stanford.edu"
-  [author.address.postal]
-  city = ""
-  country = "USA"
-[[author]]
 initials="S."
 surname="Gorbunov"
 fullname="Sergey Gorbunov"
@@ -36,6 +26,16 @@ organization="Algorand and University of Waterloo"
  email = "sergey@algorand.com"
   [author.address.postal]
   city = "Boston, MA"
+  country = "USA"
+[[author]]
+initials="R."
+surname="Wahby"
+fullname="Riad S. Wahby"
+organization="Stanford University"
+ [author.address]
+ email = "rsw@cs.stanford.edu"
+  [author.address.postal]
+  city = ""
   country = "USA"
 [[author]]
 initials="H."
