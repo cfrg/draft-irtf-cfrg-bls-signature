@@ -892,9 +892,12 @@ In addition to the parameters required to instantiate the core operations
     For security, this function MUST be orthogonal to the hash\_to\_point function.
     In addition, this function MUST be either a random oracle encoding or a
     nonuniform encoding, as defined in [@I-D.irtf-cfrg-hash-to-curve].
+
     The RECOMMENDED way of instantiating hash\_pubkey\_to\_point is to use
     the same hash-to-curve function as hash\_to\_point, with a
     different domain separation tag (see [@I-D.irtf-cfrg-hash-to-curve], Section 5.1).
+    {{ciphersuites-format}} discusses the RECOMMENDED way to construct the
+    domain separation tag.
 
 ### PopProve
 
@@ -981,7 +984,7 @@ This section defines the format for a BLS ciphersuite.
 It also gives concrete ciphersuites based on the BLS12-381 pairing-friendly
 elliptic curve [@I-D.yonezawa-pairing-friendly-curves].
 
-## Ciphersuite format
+## Ciphersuite format {#ciphersuites-format}
 
 A ciphersuite specifies all parameters from (#coreparams),
 a scheme from (#schemes), and any parameters the scheme requires.
