@@ -276,7 +276,7 @@ of important efficiency properties:
 1. The public key and the signatures are encoded as single group elements.
 1. Verification requires 2 pairing operations.
 1. A collection of signatures (signature\_1, ..., signature\_n) can be aggregated
-into a single signature (signature). Moreover, the aggregate signature can
+into a single signature. Moreover, the aggregate signature can
 be verified using only n+1 pairings (as opposed to 2n pairings, when verifying
 n signatures separately).
 
@@ -435,11 +435,11 @@ The BLS signature scheme defines the following API:
   a verification algorithm that outputs VALID if signature is a valid
   signature of message under public key PK, and INVALID otherwise.
 
-* Aggregate(signature\_1, ..., signature\_n) -> signature:
+* Aggregate((signature\_1, ..., signature\_n)) -> signature:
   an aggregation algorithm that aggregates a collection of signatures
   into a single signature.
 
-* AggregateVerify((PK\_1, message\_1), ..., (PK\_n, message\_n), signature) -> VALID or INVALID:
+* AggregateVerify((PK\_1, ..., PK\_n), (message\_1, ..., message\_n), signature) -> VALID or INVALID:
   an aggregate verification algorithm that outputs VALID if signature
   is a valid aggregated signature for a collection of public keys and messages,
   and outputs INVALID otherwise.
@@ -688,7 +688,7 @@ Procedure:
 The Aggregate algorithm aggregates multiple signatures into one.
 
 ~~~
-signature = Aggregate(signature_1, ..., signature_n)
+signature = Aggregate((signature_1, ..., signature_n))
 
 Inputs:
 - signature_1, ..., signature_n, octet strings output by
@@ -715,7 +715,8 @@ The CoreAggregateVerify algorithm checks an aggregated signature
 over several (PK, message) pairs.
 
 ~~~
-result = CoreAggregateVerify((PK_1, message_1), ..., (PK_n, message_n),
+result = CoreAggregateVerify((PK_1, ..., PK_n),
+                             (message_1, ... message_n),
                              signature)
 
 Inputs:
@@ -773,7 +774,8 @@ This function first ensures that all messages are distinct, and then
 invokes CoreAggregateVerify.
 
 ~~~
-result = AggregateVerify((PK_1, message_1), ..., (PK_n, message_n),
+result = AggregateVerify((PK_1, ..., PK_n),
+                         (message_1, ..., message_n),
                          signature)
 
 Inputs:
@@ -786,7 +788,8 @@ Outputs:
 
 Procedure:
 1. If any two input messages are equal, return INVALID.
-2. return CoreAggregateVerify((PK_1, message_1), ..., (PK_n, message_n),
+2. return CoreAggregateVerify((PK_1, ..., PK_n),
+                              (message_1, ..., message_n),
                               signature)
 ~~~
 
@@ -843,7 +846,8 @@ Procedure:
 ### AggregateVerify
 
 ~~~
-result = AggregateVerify((PK_1, message_1), ..., (PK_n, message_n),
+result = AggregateVerify((PK_1, ..., PK_n),
+                         (message_1, ..., message_n),
                          signature)
 
 Inputs:
@@ -856,8 +860,9 @@ Outputs:
 
 Procedure:
 1. for i in 1, ..., n:
-2.    mprime_i = PK_i || message_i
-3. return CoreAggregateVerify((PK_1, mprime_1), ..., (PK_n, mprime_n),
+2.     mprime_i = PK_i || message_i
+3. return CoreAggregateVerify((PK_1, ..., PK_n),
+                              (mprime_1, ..., mprime_n),
                               signature)
 ~~~
 
@@ -882,7 +887,7 @@ the standard API ((#blsapi)):
 - PopVerify(PK, proof) -> VALID or INVALID:
   an algorithm that outputs VALID if proof is valid for PK, and INVALID otherwise.
 
-- FastAggregateVerify(PK\_1, ..., PK\_n, message, signature) -> VALID or INVALID:
+- FastAggregateVerify((PK\_1, ..., PK\_n), message, signature) -> VALID or INVALID:
   a verification algorithm for the aggregate of multiple signatures on
   the same message.
   This function is faster than AggregateVerify.
@@ -973,7 +978,7 @@ Procedure:
 FastAggregateVerify uses several functions defined in (#coreops).
 
 ~~~
-result = FastAggregateVerify(PK_1, ..., PK_n, message, signature)
+result = FastAggregateVerify((PK_1, ..., PK_n), message, signature)
 
 Inputs:
 - PK_1, ..., PK_n, public keys in the format output by KeyGen.
