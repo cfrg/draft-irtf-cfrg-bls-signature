@@ -1,11 +1,11 @@
 %%%
-Title = "draft-irtf-cfrg-bls-signature-00.txt"
+Title = "draft-irtf-cfrg-bls-signature-01.txt"
 abbrev = "BLS-signature"
 category = "info"
-docName = "draft-irtf-cfrg-bls-signature-00.txt"
+docName = "draft-irtf-cfrg-bls-signature-01.txt"
 ipr = "trust200902"
 workgroup = "CFRG"
-date = 2019-08-08
+date = 2020-03-06
 
 [[author]]
 initials="D."
@@ -1259,13 +1259,13 @@ Chia uses the Fouque-Tibouchi hashing to the curve, which can be done in constan
 
 # Related Standards
 
-* Pairing-friendly curves [draft-yonezawa-pairing-friendly-curves](https://tools.ietf.org/html/draft-yonezawa-pairing-friendly-curves-00).
+* Pairing-friendly curves, [@I-D.irtf-cfrg-pairing-friendly-curves]
 
 * Pairing-based Identity-Based Encryption [IEEE 1363.3](https://ieeexplore.ieee.org/document/6662370).
 
 * Identity-Based Cryptography Standard [rfc5901](https://tools.ietf.org/html/rfc5091).
 
-* Hashing to Elliptic Curves [draft-irtf-cfrg-hash-to-curve-04](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-02), in order to implement the hash function hash\_to\_point.
+* Hashing to Elliptic Curves [@I-D.irtf-cfrg-hash-to-curve], in order to implement the hash function hash\_to\_point.
 
 * EdDSA [rfc8032](https://tools.ietf.org/html/rfc8032).
 
