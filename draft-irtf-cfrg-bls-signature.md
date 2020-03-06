@@ -698,6 +698,8 @@ Outputs:
 - signature, an octet string encoding a aggregated signature
   that combines all inputs; or INVALID.
 
+Precondition: n >= 1, otherwise return INVALID.
+
 Procedure:
 1. aggregate = signature_to_point(signature_1)
 2. If aggregate is INVALID, return INVALID
@@ -726,6 +728,8 @@ Inputs:
 
 Outputs:
 - result, either VALID or INVALID.
+
+Precondition: n >= 1, otherwise return INVALID.
 
 Procedure:
 1.  R = signature_to_point(signature)
@@ -785,6 +789,8 @@ Inputs:
 
 Outputs:
 - result, either VALID or INVALID.
+
+Precondition: n >= 1, otherwise return INVALID.
 
 Procedure:
 1. If any two input messages are equal, return INVALID.
@@ -857,6 +863,8 @@ Inputs:
 
 Outputs:
 - result, either VALID or INVALID.
+
+Precondition: n >= 1, otherwise return INVALID.
 
 Procedure:
 1. for i in 1, ..., n:
@@ -987,6 +995,8 @@ Inputs:
 
 Outputs:
 - result, either VALID or INVALID.
+
+Precondition: n >= 1, otherwise return INVALID.
 
 Procedure:
 1. aggregate = pubkey_to_point(PK_1)
