@@ -900,13 +900,13 @@ In addition to the parameters required to instantiate the core operations
   input a public key and outputs a point in the same subgroup as the
   hash\_to\_point algorithm used to instantiate the core operations.
 
-    For security, this function MUST be orthogonal to the hash\_to\_point function.
+    For security, this function MUST be domain separated from the hash\_to\_point function.
     In addition, this function MUST be either a random oracle encoding or a
     nonuniform encoding, as defined in [@I-D.irtf-cfrg-hash-to-curve].
 
     The RECOMMENDED way of instantiating hash\_pubkey\_to\_point is to use
     the same hash-to-curve function as hash\_to\_point, with a
-    different domain separation tag (see [@I-D.irtf-cfrg-hash-to-curve], Section 5.1).
+    different domain separation tag (see [@I-D.irtf-cfrg-hash-to-curve], Section 3.1).
     (#ciphersuites-format) discusses the RECOMMENDED way to construct the
     domain separation tag.
 
@@ -1004,23 +1004,39 @@ A ciphersuite specifies all parameters from (#coreparams),
 a scheme from (#schemes), and any parameters the scheme requires.
 In particular, a ciphersuite comprises:
 
-- ID: the ciphersuite ID, an ASCII string. The RECOMMENDED format for
+- ID: the ciphersuite ID, an ASCII string. The REQUIRED format for
   this string is
 
-    "BLS\_SIG\_" || H2C\_SUITE || "\_" || SC\_TAG || "\_"
+    "BLS\_SIG\_" || H2C\_SUITE\_ID || SC\_TAG || "\_"
 
-    - strings in double quotes are literal ASCII octet sequences
+    - Strings in double quotes are ASCII-encoded literals.
 
-    - H2C\_SUITE is the name of the hash-to-curve ciphersuite
+    - H2C\_SUITE\_ID is the suite ID of the hash-to-curve suite
       used to define the hash\_to\_point and hash\_pubkey\_to\_point
       functions.
 
-    - SC\_TAG SHOULD be "NUL" when SC is basic,
-    "AUG" when SC is message-augmentation, or
-    "POP" when SC is proof-of-possession.
-    Other values SHOULD NOT be used.
+    - SC\_TAG is a string indicating the scheme and, optionally, additional information.
+      The first three characters of this string MUST chosen as follows:
 
-- SC: the scheme, either basic, message-augmentation, or proof-of-possession.
+        - "NUL" if SC is basic,
+        - "AUG" if SC is message-augmentation, or
+        - "POP" if SC is proof-of-possession.
+        - Other values MUST NOT be used.
+
+        SC\_TAG MAY be used to encode other information about the
+        ciphersuite, for example, a version number.
+        When used in this way, SC\_TAG MUST contain only ASCII characters
+        between 0x21 and 0x7e (inclusive), except that it MUST NOT contain
+        underscore (0x5f).
+
+        The RECOMMENDED way to add user-defined information to SC\_TAG is to
+        append a colon (':', ASCII 0x3a) and then the informational string.
+        For example, "NUL:version=2" is an appropriate SC\_TAG value.
+
+    Note that hash-to-curve suite IDs always include a trailing underscore,
+    so no field separator is needed between H2C\_SUITE\_ID and SC\_TAG.
+
+- SC: the scheme, one of basic, message-augmentation, or proof-of-possession.
 
 - SV: the signature variant, either minimal-signature-size or
   minimal-pubkey-size.
@@ -1031,125 +1047,119 @@ In particular, a ciphersuite comprises:
 - H: a cryptographic hash function.
 
 - hash\_to\_point: a hash from arbitrary strings to elliptic curve points.
-  It is RECOMMENDED that hash\_to\_point be defined in terms of a
-  hash-to-curve suite [@I-D.irtf-cfrg-hash-to-curve] with domain separation tag equal
-  to the ID string.
+  hash\_to\_point MUST be defined in terms of a hash-to-curve suite [@I-D.irtf-cfrg-hash-to-curve].
+
+    The RECOMMENDED hash-to-curve domain separation tag is the ciphersuite ID string defined above.
 
 - hash\_pubkey\_to\_point (only specified when SC is proof-of-possession):
   a hash from serialized public keys to elliptic curve points.
-  It is RECOMMENDED that hash\_pubkey\_to\_point be defined in terms of a
-  hash-to-curve suite [@I-D.irtf-cfrg-hash-to-curve], with domain separation tag
-  constructed similarly to the ID string, namely:
+  hash\_pubkey\_to\_point MUST be defined in terms of a
+  hash-to-curve suite [@I-D.irtf-cfrg-hash-to-curve].
 
-    "BLS\_POP\_" || H2C\_SUITE || "\_" || SC\_TAG || "\_"
+    The hash-to-curve domain separation tag MUST be distinct from the domain
+    separation tag used for hash\_to\_point.
+    It is RECOMMENDED that the domain separation tag be constructed similarly to
+    the ciphersuite ID string, namely:
+
+    "BLS\_POP\_" || H2C\_SUITE\_ID || SC\_TAG || "\_"
 
 ## Ciphersuites for BLS12-381
 
 The following ciphersuites are all built on the BLS12-381 elliptic curve.
 The required primitives for this curve are given in (#bls12381def).
 
-These ciphersuites use the hash-to-curve suites BLS12381G1-SHA256-SSWU-RO-
-and BLS12381G2-SHA256-SSWU-RO- defined in [@I-D.irtf-cfrg-hash-to-curve].
+These ciphersuites use the hash-to-curve suites
+BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_ and
+BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_
+defined in [@I-D.irtf-cfrg-hash-to-curve], Section 8.7.
 Each ciphersuite defines a unique hash\_to\_point function by specifying
-a domain separation tag (see [@I-D.irtf-cfrg-hash-to-curve, Section 5.1).
+a domain separation tag (see [@I-D.irtf-cfrg-hash-to-curve, Section 3.1).
 
 ### Basic
 
-The ciphersuite with ID
-BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_NUL\_
-uses the following parameters, in addition to the common parameters below.
-
-- SV: minimal-signature-size
-
-- hash\_to\_point: BLS12381G1-SHA256-SSWU-RO- with the ASCII domain separation tag
-
-    BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_NUL\_
-
-The ciphersuite with ID
-BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_NUL\_
-uses the following parameters, in addition to the common parameters below.
-
-- SV: minimal-pubkey-size
-
-- hash\_to\_point: BLS12381G2-SHA256-SSWU-RO- with the ASCII domain separation tag
-
-    BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_NUL\_
-
-The above ciphersuites share the following common parameters:
+BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_NUL\_ is defined as follows:
 
 - SC: basic
 
+- SV: minimal-signature-size
+
 - EC: BLS12-381, as defined in (#bls12381def).
 
 - H: SHA-256
+
+- hash\_to\_point: BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
+
+    BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_NUL\_
+
+BLS\_SIG\_BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_NUL\_ is identical to
+BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_NUL\_, except for the
+following parameters:
+
+- SV: minimal-pubkey-size
+
+- hash\_to\_point: BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
+
+    BLS\_SIG\_BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_NUL\_
 
 ### Message augmentation
 
-The ciphersuite with ID
-BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_AUG\_
-uses the following parameters, in addition to the common parameters below.
-
-- SV: minimal-signature-size
-
-- hash\_to\_point: BLS12381G1-SHA256-SSWU-RO- with the ASCII domain separation tag
-
-    BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_AUG\_
-
-The ciphersuite with ID
-BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_AUG\_
-uses the following parameters, in addition to the common parameters below.
-
-- SV: minimal-pubkey-size
-
-- hash\_to\_point: BLS12381G2-SHA256-SSWU-RO- with the ASCII domain separation tag
-
-    BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_AUG\_
-
-The above ciphersuites share the following common parameters:
+BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_AUG\_ is defined as follows:
 
 - SC: message-augmentation
 
+- SV: minimal-signature-size
+
 - EC: BLS12-381, as defined in (#bls12381def).
 
 - H: SHA-256
 
-### Proof of possession
+- hash\_to\_point: BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
 
-The ciphersuite with ID
-BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_POP\_
-uses the following parameters, in addition to the common parameters below.
+    BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_AUG\_
 
-- SV: minimal-signature-size
-
-- hash\_to\_point: BLS12381G1-SHA256-SSWU-RO- with the ASCII domain separation tag
-
-    BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_POP\_
-
-- hash\_pubkey\_to\_point: BLS12381G1-SHA256-SSWU-RO- with the ASCII domain separation tag
-
-    BLS\_POP\_BLS12381G1-SHA256-SSWU-RO-\_POP\_
-
-The ciphersuite with ID
-BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_POP\_
-uses the following parameters, in addition to the common parameters below.
+BLS\_SIG\_BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_AUG\_ is identical to
+BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_AUG\_, except for the
+following parameters:
 
 - SV: minimal-pubkey-size
 
-- hash\_to\_point: BLS12381G2-SHA256-SSWU-RO- with the ASCII domain separation tag
+- hash\_to\_point: BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
 
-    BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_POP\_
+    BLS\_SIG\_BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_AUG\_
 
-- hash\_pubkey\_to\_point: BLS12381G2-SHA256-SSWU-RO- with the ASCII domain separation tag
+### Proof of possession
 
-    BLS\_POP\_BLS12381G2-SHA256-SSWU-RO-\_POP\_
-
-The above ciphersuites share the following common parameters:
+BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_POP\_ is defined as follows:
 
 - SC: proof-of-possession
+
+- SV: minimal-signature-size
 
 - EC: BLS12-381, as defined in (#bls12381def).
 
 - H: SHA-256
+
+- hash\_to\_point: BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
+
+    BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_POP\_
+
+- hash\_pubkey\_to\_point: BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
+
+    BLS\_POP\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_POP\_
+
+BLS\_SIG\_BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_POP\_ is identical to
+BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_POP\_, except for the
+following parameters:
+
+- SV: minimal-pubkey-size
+
+- hash\_to\_point: BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
+
+    BLS\_SIG\_BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_POP\_
+
+- hash\_pubkey\_to\_point: BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
+
+    BLS\_POP\_BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_POP\_
 
 # Security Considerations
 
