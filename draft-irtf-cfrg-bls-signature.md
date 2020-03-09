@@ -5,7 +5,7 @@ category = "info"
 docName = "draft-irtf-cfrg-bls-signature-01.txt"
 ipr = "trust200902"
 workgroup = "CFRG"
-date = 2020-03-06
+date = 2020-03-09
 
 [[author]]
 initials="D."
