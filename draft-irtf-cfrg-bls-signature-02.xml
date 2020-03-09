@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.nl" -->
 <!DOCTYPE rfc SYSTEM 'rfc2629.dtd' []>
-<rfc ipr="trust200902" xml:lang="en" consensus="yes" docName="draft-irtf-cfrg-bls-signature-01" category="info">
+<rfc ipr="trust200902" xml:lang="en" consensus="yes" docName="draft-irtf-cfrg-bls-signature-02" category="info">
 <?rfc toc="yes"?><?rfc symrefs="yes"?><?rfc sortrefs="yes"?><?rfc compact="yes"?><?rfc subcompact="no"?><?rfc comments="no"?>
 <front>
-<title abbrev="BLS-signature">draft-irtf-cfrg-bls-signature-01.txt</title><author initials="D." surname="Boneh" fullname="Dan Boneh"><organization>Stanford University</organization><address><postal><street></street>
+<title abbrev="BLS-signature">draft-irtf-cfrg-bls-signature-02</title><author initials="D." surname="Boneh" fullname="Dan Boneh"><organization>Stanford University</organization><address><postal><street></street>
 <country>USA</country>
 </postal><email>dabo@cs.stanford.edu</email>
 </address></author>

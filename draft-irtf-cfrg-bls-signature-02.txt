@@ -15,8 +15,8 @@ Expires: September 10, 2020          Algorand and University of Waterloo
                                                            March 9, 2020
 
 
-                  draft-irtf-cfrg-bls-signature-01.txt
-                    draft-irtf-cfrg-bls-signature-01
+                    draft-irtf-cfrg-bls-signature-02
+                    draft-irtf-cfrg-bls-signature-02
 
 Abstract
 
