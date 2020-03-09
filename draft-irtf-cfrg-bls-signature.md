@@ -364,7 +364,7 @@ The following notation and primitives are used:
 * a || b denotes the concatenation of octet strings a and b.
 
 * A pairing-friendly elliptic curve defines the following primitives
-  (see [@I-D.yonezawa-pairing-friendly-curves] for detailed discussion):
+  (see [@I-D.irtf-cfrg-pairing-friendly-curves] for detailed discussion):
 
   - E1, E2: elliptic curve groups defined over finite fields.
     This document assumes that E1 has a more compact representation than
@@ -1038,7 +1038,7 @@ Procedure:
 
 This section defines the format for a BLS ciphersuite.
 It also gives concrete ciphersuites based on the BLS12-381 pairing-friendly
-elliptic curve [@I-D.yonezawa-pairing-friendly-curves].
+elliptic curve [@I-D.irtf-cfrg-pairing-friendly-curves].
 
 ## Ciphersuite format {#ciphersuites-format}
 
@@ -1315,7 +1315,7 @@ The ciphersuites in (#ciphersuites) are based upon the BLS12-381
 pairing-friendly elliptic curve.
 The following defines the correspondence between the primitives
 in (#definitions) and the parameters given in Section 4.2.2 of
-[@I-D.yonezawa-pairing-friendly-curves].
+[@I-D.irtf-cfrg-pairing-friendly-curves].
 
 - E1, G1: the curve E and its order-r subgroup.
 
@@ -1328,7 +1328,7 @@ in (#definitions) and the parameters given in Section 4.2.2 of
 - P2: the point BP'.
 
 - e: the optimal Ate pairing defined in Appendix A of
-  [@I-D.yonezawa-pairing-friendly-curves].
+  [@I-D.irtf-cfrg-pairing-friendly-curves].
 
 - point\_to\_octets and octets\_to\_point use the compressed
   serialization formats for E1 and E2 defined by [@!ZCash].
