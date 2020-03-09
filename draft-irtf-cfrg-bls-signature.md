@@ -602,12 +602,13 @@ Parameters:
 Definitions:
 - HKDF-Extract is as defined in RFC5869, instantiated with hash H.
 - HKDF-Expand is as defined in RFC5869, instantiated with hash H.
+- I2OSP and OS2IP are as defined in RFC8017, Section 4.
 - L is the integer given by ceil((3 * ceil(log2(r))) / 16).
 - "BLS-SIG-KEYGEN-SALT-" is an ASCII string comprising 20 octets.
 
 Procedure:
-1. PRK = HKDF-Extract("BLS-SIG-KEYGEN-SALT-", IKM)
-2. OKM = HKDF-Expand(PRK, key_info, L)
+1. PRK = HKDF-Extract("BLS-SIG-KEYGEN-SALT-", IKM || I2OSP(0, 1))
+2. OKM = HKDF-Expand(PRK, key_info || I2OSP(L, 2), L)
 3. SK = OS2IP(OKM) mod r
 4. return SK
 ~~~
