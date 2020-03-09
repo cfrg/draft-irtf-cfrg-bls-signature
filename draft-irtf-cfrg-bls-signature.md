@@ -1,11 +1,11 @@
 %%%
-Title = "draft-irtf-cfrg-bls-signature-00.txt"
+Title = "draft-irtf-cfrg-bls-signature-01.txt"
 abbrev = "BLS-signature"
 category = "info"
-docName = "draft-irtf-cfrg-bls-signature-00.txt"
+docName = "draft-irtf-cfrg-bls-signature-01.txt"
 ipr = "trust200902"
 workgroup = "CFRG"
-date = 2019-08-08
+date = 2020-03-06
 
 [[author]]
 initials="D."
@@ -76,6 +76,23 @@ organization="Algorand"
     </author>
     <date year="2015" month="August"/>
   </front>
+</reference>
+<reference anchor="ADR02" target="https://doi.org/10.1007/3-540-46035-7_6">
+  <front>
+    <title>On the Security of Joint Signature and Encryption</title>
+    <author initials="J. H." surname="An" fullname="Jee Hea An">
+      <organization>SoftMax Inc.</organization>
+    </author>
+    <author initials="Y." surname="Dodis" fullname="Yevgeniy Dodis">
+      <organization>New York University</organization>
+    </author>
+    <author initials="T." surname="Rabin" fullname="Tal Rabin">
+      <organization>IBM T.J. Watson Research Center</organization>
+    </author>
+    <date year="2002" month="April"/>
+  </front>
+  <seriesInfo name="In" value="EUROCRYPT"/>
+  <seriesInfo name="pages" value="83-107"/>
 </reference>
 <reference anchor="HDWH12" target="https://www.usenix.org/system/files/conference/usenixsecurity12/sec12-final228.pdf">
   <front>
@@ -259,7 +276,7 @@ of important efficiency properties:
 1. The public key and the signatures are encoded as single group elements.
 1. Verification requires 2 pairing operations.
 1. A collection of signatures (signature\_1, ..., signature\_n) can be aggregated
-into a single signature (signature). Moreover, the aggregate signature can
+into a single signature. Moreover, the aggregate signature can
 be verified using only n+1 pairings (as opposed to 2n pairings, when verifying
 n signatures separately).
 
@@ -418,11 +435,11 @@ The BLS signature scheme defines the following API:
   a verification algorithm that outputs VALID if signature is a valid
   signature of message under public key PK, and INVALID otherwise.
 
-* Aggregate(signature\_1, ..., signature\_n) -> signature:
+* Aggregate((signature\_1, ..., signature\_n)) -> signature:
   an aggregation algorithm that aggregates a collection of signatures
   into a single signature.
 
-* AggregateVerify((PK\_1, message\_1), ..., (PK\_n, message\_n), signature) -> VALID or INVALID:
+* AggregateVerify((PK\_1, ..., PK\_n), (message\_1, ..., message\_n), signature) -> VALID or INVALID:
   an aggregate verification algorithm that outputs VALID if signature
   is a valid aggregated signature for a collection of public keys and messages,
   and outputs INVALID otherwise.
@@ -597,6 +614,9 @@ Procedure:
 
 The KeyValidate algorithm ensures that a public key is valid.
 
+As an optimization, implementations MAY cache the result of KeyValidate
+in order to avoid unnecessarily repeating validation for known keys.
+
 ~~~
 result = KeyValidate(PK)
 
@@ -640,8 +660,6 @@ Procedure:
 The CoreVerify algorithm checks that a signature is valid for
 the octet string message under the public key PK.
 
-The public key PK must satisfy KeyValidate(PK) == VALID ((#keyvalidate)).
-
 ~~~
 result = CoreVerify(PK, message, signature)
 
@@ -657,11 +675,12 @@ Procedure:
 1. R = signature_to_point(signature)
 2. If R is INVALID, return INVALID
 3. If signature_subgroup_check(R) is INVALID, return INVALID
-4. xP = pubkey_to_point(PK)
-5. Q = hash_to_point(message)
-6. C1 = pairing(Q, xP)
-7. C2 = pairing(R, P)
-8. If C1 == C2, return VALID, else return INVALID
+4. If KeyValidate(PK) is INVALID, return INVALID
+5. xP = pubkey_to_point(PK)
+6. Q = hash_to_point(message)
+7. C1 = pairing(Q, xP)
+8. C2 = pairing(R, P)
+9. If C1 == C2, return VALID, else return INVALID
 ~~~
 
 ## Aggregate
@@ -669,7 +688,7 @@ Procedure:
 The Aggregate algorithm aggregates multiple signatures into one.
 
 ~~~
-signature = Aggregate(signature_1, ..., signature_n)
+signature = Aggregate((signature_1, ..., signature_n))
 
 Inputs:
 - signature_1, ..., signature_n, octet strings output by
@@ -678,6 +697,8 @@ Inputs:
 Outputs:
 - signature, an octet string encoding a aggregated signature
   that combines all inputs; or INVALID.
+
+Precondition: n >= 1, otherwise return INVALID.
 
 Procedure:
 1. aggregate = signature_to_point(signature_1)
@@ -695,11 +716,9 @@ Procedure:
 The CoreAggregateVerify algorithm checks an aggregated signature
 over several (PK, message) pairs.
 
-All public keys PK\_i must satisfy KeyValidate(PK\_i) == VALID
-((#keyvalidate)).
-
 ~~~
-result = CoreAggregateVerify((PK_1, message_1), ..., (PK_n, message_n),
+result = CoreAggregateVerify((PK_1, ..., PK_n),
+                             (message_1, ... message_n),
                              signature)
 
 Inputs:
@@ -710,17 +729,20 @@ Inputs:
 Outputs:
 - result, either VALID or INVALID.
 
+Precondition: n >= 1, otherwise return INVALID.
+
 Procedure:
-1. R = signature_to_point(signature)
-2. If R is INVALID, return INVALID
-3. If signature_subgroup_check(R) is INVALID, return INVALID
-4. C1 = 1 (the identity element in GT)
-5. for i in 1, ..., n:
-6.     xP = pubkey_to_point(PK_i)
-7.     Q = hash_to_point(message_i)
-8.     C1 = C1 * pairing(Q, xP)
-9. C2 = pairing(R, P)
-10. If C1 == C2, return VALID, else return INVALID
+1.  R = signature_to_point(signature)
+2.  If R is INVALID, return INVALID
+3.  If signature_subgroup_check(R) is INVALID, return INVALID
+4.  C1 = 1 (the identity element in GT)
+5.  for i in 1, ..., n:
+6.      If KeyValidate(PK_i) is INVALID, return INVALID
+7.      xP = pubkey_to_point(PK_i)
+8.      Q = hash_to_point(message_i)
+9.      C1 = C1 * pairing(Q, xP)
+10. C2 = pairing(R, P)
+11. If C1 == C2, return VALID, else return INVALID
 ~~~
 
 # BLS Signatures {#schemes}
@@ -750,16 +772,14 @@ The Sign and Verify functions are identical to CoreSign and
 CoreVerify ((#coreops)), respectively.
 AggregateVerify is defined below.
 
-All public keys PK supplied as arguments to Verify and AggregateVerify
-MUST satisfy KeyValidate(PK) == VALID ((#keyvalidate)).
-
 ### AggregateVerify
 
 This function first ensures that all messages are distinct, and then
 invokes CoreAggregateVerify.
 
 ~~~
-result = AggregateVerify((PK_1, message_1), ..., (PK_n, message_n),
+result = AggregateVerify((PK_1, ..., PK_n),
+                         (message_1, ..., message_n),
                          signature)
 
 Inputs:
@@ -770,9 +790,12 @@ Inputs:
 Outputs:
 - result, either VALID or INVALID.
 
+Precondition: n >= 1, otherwise return INVALID.
+
 Procedure:
 1. If any two input messages are equal, return INVALID.
-2. return CoreAggregateVerify((PK_1, message_1), ..., (PK_n, message_n),
+2. return CoreAggregateVerify((PK_1, ..., PK_n),
+                              (message_1, ..., message_n),
                               signature)
 ~~~
 
@@ -782,9 +805,6 @@ In a message augmentation scheme, signatures are generated
 over the concatenation of the public key and the message,
 ensuring that messages signed by different public keys are
 distinct.
-
-All public keys PK supplied as arguments to Verify and AggregateVerify
-MUST satisfy KeyValidate(PK) == VALID ((#keyvalidate)).
 
 ### Sign
 
@@ -832,7 +852,8 @@ Procedure:
 ### AggregateVerify
 
 ~~~
-result = AggregateVerify((PK_1, message_1), ..., (PK_n, message_n),
+result = AggregateVerify((PK_1, ..., PK_n),
+                         (message_1, ..., message_n),
                          signature)
 
 Inputs:
@@ -843,10 +864,13 @@ Inputs:
 Outputs:
 - result, either VALID or INVALID.
 
+Precondition: n >= 1, otherwise return INVALID.
+
 Procedure:
 1. for i in 1, ..., n:
-2.    mprime_i = PK_i || message_i
-3. return CoreAggregateVerify((PK_1, mprime_1), ..., (PK_n, mprime_n),
+2.     mprime_i = PK_i || message_i
+3. return CoreAggregateVerify((PK_1, ..., PK_n),
+                              (mprime_1, ..., mprime_n),
                               signature)
 ~~~
 
@@ -871,14 +895,14 @@ the standard API ((#blsapi)):
 - PopVerify(PK, proof) -> VALID or INVALID:
   an algorithm that outputs VALID if proof is valid for PK, and INVALID otherwise.
 
-- FastAggregateVerify(PK\_1, ..., PK\_n, message, signature) -> VALID or INVALID:
+- FastAggregateVerify((PK\_1, ..., PK\_n), message, signature) -> VALID or INVALID:
   a verification algorithm for the aggregate of multiple signatures on
   the same message.
   This function is faster than AggregateVerify.
 
 All public keys used by Verify, AggregateVerify, and FastAggregateVerify
-MUST be accompanied by a proof of possession generated by PopProve,
-and the result of PopVerify on this proof MUST be VALID.
+MUST be accompanied by a proof of possession, and the result of evaluating
+PopVerify on the public key and proof MUST be VALID.
 
 ### Parameters {#popparams}
 
@@ -889,14 +913,14 @@ In addition to the parameters required to instantiate the core operations
   input a public key and outputs a point in the same subgroup as the
   hash\_to\_point algorithm used to instantiate the core operations.
 
-    For security, this function MUST be orthogonal to the hash\_to\_point function.
+    For security, this function MUST be domain separated from the hash\_to\_point function.
     In addition, this function MUST be either a random oracle encoding or a
     nonuniform encoding, as defined in [@I-D.irtf-cfrg-hash-to-curve].
 
     The RECOMMENDED way of instantiating hash\_pubkey\_to\_point is to use
     the same hash-to-curve function as hash\_to\_point, with a
-    different domain separation tag (see [@I-D.irtf-cfrg-hash-to-curve], Section 5.1).
-    {{ciphersuites-format}} discusses the RECOMMENDED way to construct the
+    different domain separation tag (see [@I-D.irtf-cfrg-hash-to-curve], Section 3.1).
+    (#ciphersuites-format) discusses the RECOMMENDED way to construct the
     domain separation tag.
 
 ### PopProve
@@ -929,8 +953,11 @@ Procedure:
 
 ### PopVerify
 
-Note that the following uses several functions defined in (#coreops).
+PopVerify uses several functions defined in (#coreops).
 The hash\_pubkey\_to\_point function is defined in (#popparams).
+
+As an optimization, implementations MAY cache the result of PopVerify
+in order to avoid unnecessarily repeating validation for known keys.
 
 ~~~
 result = PopVerify(PK, proof)
@@ -956,10 +983,10 @@ Procedure:
 
 ### FastAggregateVerify
 
-Note that the following uses several functions defined in (#coreops).
+FastAggregateVerify uses several functions defined in (#coreops).
 
 ~~~
-result = FastAggregateVerify(PK_1, ..., PK_n, message, signature)
+result = FastAggregateVerify((PK_1, ..., PK_n), message, signature)
 
 Inputs:
 - PK_1, ..., PK_n, public keys in the format output by KeyGen.
@@ -968,6 +995,8 @@ Inputs:
 
 Outputs:
 - result, either VALID or INVALID.
+
+Precondition: n >= 1, otherwise return INVALID.
 
 Procedure:
 1. aggregate = pubkey_to_point(PK_1)
@@ -990,23 +1019,39 @@ A ciphersuite specifies all parameters from (#coreparams),
 a scheme from (#schemes), and any parameters the scheme requires.
 In particular, a ciphersuite comprises:
 
-- ID: the ciphersuite ID, an ASCII string. The RECOMMENDED format for
+- ID: the ciphersuite ID, an ASCII string. The REQUIRED format for
   this string is
 
-    "BLS\_SIG\_" || H2C\_SUITE || "\_" || SC\_TAG || "\_"
+    "BLS\_SIG\_" || H2C\_SUITE\_ID || SC\_TAG || "\_"
 
-    - strings in double quotes are literal ASCII octet sequences
+    - Strings in double quotes are ASCII-encoded literals.
 
-    - H2C\_SUITE is the name of the hash-to-curve ciphersuite
+    - H2C\_SUITE\_ID is the suite ID of the hash-to-curve suite
       used to define the hash\_to\_point and hash\_pubkey\_to\_point
       functions.
 
-    - SC\_TAG SHOULD be "NUL" when SC is basic,
-    "AUG" when SC is message-augmentation, or
-    "POP" when SC is proof-of-possession.
-    Other values SHOULD NOT be used.
+    - SC\_TAG is a string indicating the scheme and, optionally, additional information.
+      The first three characters of this string MUST chosen as follows:
 
-- SC: the scheme, either basic, message-augmentation, or proof-of-possession.
+        - "NUL" if SC is basic,
+        - "AUG" if SC is message-augmentation, or
+        - "POP" if SC is proof-of-possession.
+        - Other values MUST NOT be used.
+
+        SC\_TAG MAY be used to encode other information about the
+        ciphersuite, for example, a version number.
+        When used in this way, SC\_TAG MUST contain only ASCII characters
+        between 0x21 and 0x7e (inclusive), except that it MUST NOT contain
+        underscore (0x5f).
+
+        The RECOMMENDED way to add user-defined information to SC\_TAG is to
+        append a colon (':', ASCII 0x3a) and then the informational string.
+        For example, "NUL:version=2" is an appropriate SC\_TAG value.
+
+    Note that hash-to-curve suite IDs always include a trailing underscore,
+    so no field separator is needed between H2C\_SUITE\_ID and SC\_TAG.
+
+- SC: the scheme, one of basic, message-augmentation, or proof-of-possession.
 
 - SV: the signature variant, either minimal-signature-size or
   minimal-pubkey-size.
@@ -1017,139 +1062,130 @@ In particular, a ciphersuite comprises:
 - H: a cryptographic hash function.
 
 - hash\_to\_point: a hash from arbitrary strings to elliptic curve points.
-  It is RECOMMENDED that hash\_to\_point be defined in terms of a
-  hash-to-curve suite [@I-D.irtf-cfrg-hash-to-curve] with domain separation tag equal
-  to the ID string.
+  hash\_to\_point MUST be defined in terms of a hash-to-curve suite [@I-D.irtf-cfrg-hash-to-curve].
+
+    The RECOMMENDED hash-to-curve domain separation tag is the ciphersuite ID string defined above.
 
 - hash\_pubkey\_to\_point (only specified when SC is proof-of-possession):
   a hash from serialized public keys to elliptic curve points.
-  It is RECOMMENDED that hash\_pubkey\_to\_point be defined in terms of a
-  hash-to-curve suite [@I-D.irtf-cfrg-hash-to-curve], with domain separation tag
-  constructed similarly to the ID string, namely:
+  hash\_pubkey\_to\_point MUST be defined in terms of a
+  hash-to-curve suite [@I-D.irtf-cfrg-hash-to-curve].
 
-    "BLS\_POP\_" || H2C\_SUITE || "\_" || SC\_TAG || "\_"
+    The hash-to-curve domain separation tag MUST be distinct from the domain
+    separation tag used for hash\_to\_point.
+    It is RECOMMENDED that the domain separation tag be constructed similarly to
+    the ciphersuite ID string, namely:
+
+    "BLS\_POP\_" || H2C\_SUITE\_ID || SC\_TAG || "\_"
 
 ## Ciphersuites for BLS12-381
 
 The following ciphersuites are all built on the BLS12-381 elliptic curve.
 The required primitives for this curve are given in (#bls12381def).
 
-These ciphersuites use the hash-to-curve suites BLS12381G1-SHA256-SSWU-RO-
-and BLS12381G2-SHA256-SSWU-RO- defined in [@I-D.irtf-cfrg-hash-to-curve].
+These ciphersuites use the hash-to-curve suites
+BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_ and
+BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_
+defined in [@I-D.irtf-cfrg-hash-to-curve], Section 8.7.
 Each ciphersuite defines a unique hash\_to\_point function by specifying
-a domain separation tag (see [@I-D.irtf-cfrg-hash-to-curve, Section 5.1).
+a domain separation tag (see [@I-D.irtf-cfrg-hash-to-curve, Section 3.1).
 
 ### Basic
 
-The ciphersuite with ID
-BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_NUL\_
-uses the following parameters, in addition to the common parameters below.
-
-- SV: minimal-signature-size
-
-- hash\_to\_point: BLS12381G1-SHA256-SSWU-RO- with the ASCII domain separation tag
-
-    BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_NUL\_
-
-The ciphersuite with ID
-BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_NUL\_
-uses the following parameters, in addition to the common parameters below.
-
-- SV: minimal-pubkey-size
-
-- hash\_to\_point: BLS12381G2-SHA256-SSWU-RO- with the ASCII domain separation tag
-
-    BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_NUL\_
-
-The above ciphersuites share the following common parameters:
+BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_NUL\_ is defined as follows:
 
 - SC: basic
 
+- SV: minimal-signature-size
+
 - EC: BLS12-381, as defined in (#bls12381def).
 
 - H: SHA-256
+
+- hash\_to\_point: BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
+
+    BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_NUL\_
+
+BLS\_SIG\_BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_NUL\_ is identical to
+BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_NUL\_, except for the
+following parameters:
+
+- SV: minimal-pubkey-size
+
+- hash\_to\_point: BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
+
+    BLS\_SIG\_BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_NUL\_
 
 ### Message augmentation
 
-The ciphersuite with ID
-BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_AUG\_
-uses the following parameters, in addition to the common parameters below.
-
-- SV: minimal-signature-size
-
-- hash\_to\_point: BLS12381G1-SHA256-SSWU-RO- with the ASCII domain separation tag
-
-    BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_AUG\_
-
-The ciphersuite with ID
-BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_AUG\_
-uses the following parameters, in addition to the common parameters below.
-
-- SV: minimal-pubkey-size
-
-- hash\_to\_point: BLS12381G2-SHA256-SSWU-RO- with the ASCII domain separation tag
-
-    BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_AUG\_
-
-The above ciphersuites share the following common parameters:
+BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_AUG\_ is defined as follows:
 
 - SC: message-augmentation
 
+- SV: minimal-signature-size
+
 - EC: BLS12-381, as defined in (#bls12381def).
 
 - H: SHA-256
 
-### Proof of possession
+- hash\_to\_point: BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
 
-The ciphersuite with ID
-BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_POP\_
-uses the following parameters, in addition to the common parameters below.
+    BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_AUG\_
 
-- SV: minimal-signature-size
-
-- hash\_to\_point: BLS12381G1-SHA256-SSWU-RO- with the ASCII domain separation tag
-
-    BLS\_SIG\_BLS12381G1-SHA256-SSWU-RO-\_POP\_
-
-- hash\_pubkey\_to\_point: BLS12381G1-SHA256-SSWU-RO- with the ASCII domain separation tag
-
-    BLS\_POP\_BLS12381G1-SHA256-SSWU-RO-\_POP\_
-
-The ciphersuite with ID
-BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_POP\_
-uses the following parameters, in addition to the common parameters below.
+BLS\_SIG\_BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_AUG\_ is identical to
+BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_AUG\_, except for the
+following parameters:
 
 - SV: minimal-pubkey-size
 
-- hash\_to\_point: BLS12381G2-SHA256-SSWU-RO- with the ASCII domain separation tag
+- hash\_to\_point: BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
 
-    BLS\_SIG\_BLS12381G2-SHA256-SSWU-RO-\_POP\_
+    BLS\_SIG\_BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_AUG\_
 
-- hash\_pubkey\_to\_point: BLS12381G2-SHA256-SSWU-RO- with the ASCII domain separation tag
+### Proof of possession
 
-    BLS\_POP\_BLS12381G2-SHA256-SSWU-RO-\_POP\_
-
-The above ciphersuites share the following common parameters:
+BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_POP\_ is defined as follows:
 
 - SC: proof-of-possession
+
+- SV: minimal-signature-size
 
 - EC: BLS12-381, as defined in (#bls12381def).
 
 - H: SHA-256
+
+- hash\_to\_point: BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
+
+    BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_POP\_
+
+- hash\_pubkey\_to\_point: BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
+
+    BLS\_POP\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_POP\_
+
+BLS\_SIG\_BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_POP\_ is identical to
+BLS\_SIG\_BLS12381G1\_XMD:SHA-256\_SSWU\_RO\_POP\_, except for the
+following parameters:
+
+- SV: minimal-pubkey-size
+
+- hash\_to\_point: BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
+
+    BLS\_SIG\_BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_POP\_
+
+- hash\_pubkey\_to\_point: BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_ with the ASCII-encoded domain separation tag
+
+    BLS\_POP\_BLS12381G2\_XMD:SHA-256\_SSWU\_RO\_POP\_
 
 # Security Considerations
 
 ## Validating public keys {#pubkeyvalid}
 
 All algorithms in (#coreops) and (#schemes) that operate on public keys
-require first validating these keys.
+require first validating those keys.
 For the basic and message augmentation schemes, the use of KeyValidate
 is REQUIRED.
 For the proof of possession scheme, each public key MUST be accompanied by
 a proof of possession, and use of PopVerify is REQUIRED.
-
-Note that implementations MAY cache validation results for public keys
-in order to avoid unnecessarily repeating validation for known keys.
 
 ## Skipping membership check
 
@@ -1165,9 +1201,7 @@ This check is REQUIRED of conforming implementations, for two reasons.
 
 2. Even if the pairing operation behaves properly on inputs that are outside
    the correct subgroups, skipping the subgroup check breaks the strong
-   unforgeability property.
-
-<!-- TODO(RSW): add definition or link for strong unforgeability -->
+   unforgeability property [@ADR02].
 
 ## Side channel attacks
 
@@ -1225,13 +1259,13 @@ Chia uses the Fouque-Tibouchi hashing to the curve, which can be done in constan
 
 # Related Standards
 
-* Pairing-friendly curves [draft-yonezawa-pairing-friendly-curves](https://tools.ietf.org/html/draft-yonezawa-pairing-friendly-curves-00).
+* Pairing-friendly curves, [@I-D.irtf-cfrg-pairing-friendly-curves]
 
 * Pairing-based Identity-Based Encryption [IEEE 1363.3](https://ieeexplore.ieee.org/document/6662370).
 
 * Identity-Based Cryptography Standard [rfc5901](https://tools.ietf.org/html/rfc5091).
 
-* Hashing to Elliptic Curves [draft-irtf-cfrg-hash-to-curve-04](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-02), in order to implement the hash function hash\_to\_point.
+* Hashing to Elliptic Curves [@I-D.irtf-cfrg-hash-to-curve], in order to implement the hash function hash\_to\_point.
 
 * EdDSA [rfc8032](https://tools.ietf.org/html/rfc8032).
 
