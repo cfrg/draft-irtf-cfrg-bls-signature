@@ -1,11 +1,16 @@
 %%%
-Title = "draft-irtf-cfrg-bls-signature-01.txt"
+title = "BLS Signatures"
 abbrev = "BLS-signature"
 category = "info"
-docName = "draft-irtf-cfrg-bls-signature-01.txt"
 ipr = "trust200902"
+area = "Internet"
 workgroup = "CFRG"
 date = 2020-03-09
+
+[seriesInfo]
+name = "Internet-Draft"
+value = "draft-irtf-cfrg-bls-signature-03"
+status = "informational"
 
 [[author]]
 initials="D."
