@@ -5,7 +5,6 @@ category = "info"
 ipr = "trust200902"
 area = "Internet"
 workgroup = "CFRG"
-date = 2020-03-09
 
 [seriesInfo]
 name = "Internet-Draft"
