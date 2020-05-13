@@ -7,7 +7,7 @@ This repo was moved from [here](https://github.com/pairingwg/bls_standard).
 
 * Updated from -00 to -02. See changelog.
 
-* This draft has been adopted by the CFRG as an active [work group draft](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-00)
+* This draft has been adopted by the CFRG as an active [work group draft](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-02)
 
 ## Changelog:
 * Changes from draft-irtf-cfrg-bls-signature-01 to draft-irtf-cfrg-bls-signature-02:
@@ -34,7 +34,7 @@ This repo was moved from [here](https://github.com/pairingwg/bls_standard).
 * Hash to curve draft: [stable](https://tools.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/), [dev](https://github.com/cfrg/draft-irtf-cfrg-hash-to-curve)
 * Current reference implementations:
   * https://github.com/kwantam/bls_sigs_ref
-  * https://github.com/sigp/milagro_bls/tree/experimental
+  * https://github.com/sigp/milagro_bls/
   * https://github.com/hyperledger/ursa/blob/master/libursa/src/bls/mod.rs
   * https://github.com/mikelodder7/bls12-381-comparison
 
@@ -42,7 +42,7 @@ This repo was moved from [here](https://github.com/pairingwg/bls_standard).
 
 ## Version control
 
-Major milestone updates (version [0](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-00), 1, ...)
+Major milestone updates (version [0](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-00), [1](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-01), [2](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-02), ...)
 will be uploaded to [IETF webpage](https://datatracker.ietf.org/doc/draft-irtf-cfrg-bls-signature).
 Minor advancement are released through subversions.
 
