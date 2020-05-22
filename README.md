@@ -30,14 +30,14 @@ This repo was moved from [here](https://github.com/pairingwg/bls_standard).
   * Use hash to curve/group methods from [Hash to curve draft](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-04)
 
 ## Useful links:
-* Pairing draft: [stable](https://datatracker.ietf.org/doc/draft-irtf-cfrg--pairing-friendly-curves/), [dev](https://github.com/pairingwg/pfc_standard)
-* Hash to curve draft: [stable](https://tools.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/), [dev](https://github.com/cfrg/draft-irtf-cfrg-hash-to-curve)
+* Pairing draft: [stable](https://datatracker.ietf.org/doc/draft-irtf-cfrg-pairing-friendly-curves/), [dev](https://github.com/pairingwg/pfc_standard)
+* Hash to curve draft: [stable](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve/), [dev](https://github.com/cfrg/draft-irtf-cfrg-hash-to-curve)
 * Current reference implementations:
   * https://github.com/kwantam/bls_sigs_ref
   * https://github.com/sigp/milagro_bls/
   * https://github.com/hyperledger/ursa/blob/master/libursa/src/bls/mod.rs
   * https://github.com/mikelodder7/bls12-381-comparison
-
+  * https://github.com/apache/incubator-milagro-crypto-rust
 
 
 ## Version control
