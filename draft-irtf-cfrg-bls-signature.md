@@ -1281,10 +1281,6 @@ One possibility is to generate IKM from a trusted source of randomness.
 Guidelines on constructing such a source are outside the scope of this
 document.
 
-Secret keys MAY be generated using other methods; in this case they MUST
-be infeasible to guess and MUST be indistinguishable from uniformly random
-modulo r.
-
 ## Implementing hash\_to\_point and hash\_pubkey\_to\_point
 
 The security analysis models hash\_to\_point and hash\_pubkey\_to\_point
