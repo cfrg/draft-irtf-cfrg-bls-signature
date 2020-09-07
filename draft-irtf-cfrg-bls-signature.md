@@ -628,18 +628,13 @@ that is statistically close to uniformly random in the range 1 <= SK < r.
 
 The SkToPk algorithm takes a secret key SK and outputs the corresponding
 public key PK.
-
-SK MUST be indistinguishable from uniformly random modulo r ((#coreparams))
-and infeasible to guess, e.g., generated using a trusted source of randomness.
-KeyGen ((#keygen)) outputs SK meeting these requirements.
-Other key generation approaches meeting these requirements MAY also be used;
-details of such methods are beyond the scope of this document.
+(#keygen) discusses requirements for SK.
 
 ~~~
 PK = SkToPk(SK)
 
 Inputs:
-- SK, a secret integer such that 0 <= SK < r.
+- SK, a secret integer such that 1 <= SK < r.
 
 Outputs:
 - PK, a public key encoded as an octet string.
