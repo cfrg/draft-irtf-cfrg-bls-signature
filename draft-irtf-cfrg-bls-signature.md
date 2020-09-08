@@ -45,7 +45,7 @@ organization="Stanford University"
 initials="H."
 surname="Wee"
 fullname="Hoeteck Wee"
-organization="Algorand and ENS, Paris"
+organization="NTT Research and ENS, Paris"
  [author.address]
  email = "wee@di.ens.fr"
   [author.address.postal]
