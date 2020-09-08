@@ -25,12 +25,12 @@ organization="Stanford University"
 initials="S."
 surname="Gorbunov"
 fullname="Sergey Gorbunov"
-organization="Algorand and University of Waterloo"
+organization="University of Waterloo"
  [author.address]
- email = "sergey@algorand.com"
+ email = "sgorbunov@uwaterloo.ca"
   [author.address.postal]
-  city = "Boston, MA"
-  country = "USA"
+  city = "Waterloo, ON"
+  country = "Canada"
 [[author]]
 initials="R."
 surname="Wahby"
