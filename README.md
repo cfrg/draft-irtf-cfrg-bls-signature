@@ -10,6 +10,11 @@ This repo was moved from [here](https://github.com/pairingwg/bls_standard).
 * This draft has been adopted by the CFRG as an active [work group draft](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-02)
 
 ## Changelog:
+* Changes from draft-irtf-cfrg-bls-signature-02 to draft-irtf-cfrg-bls-signtuare-03:
+  * Updated author affiliations
+  * Updated hash-to-curve reference to version -09
+  * minor pagination changes
+
 * Changes from draft-irtf-cfrg-bls-signature-01 to draft-irtf-cfrg-bls-signature-02:
   * No change, maintenance release only: fix broken bibliography entry for hash-to-curve.
 
