@@ -10,6 +10,12 @@ This repo was moved from [here](https://github.com/pairingwg/bls_standard).
 * This draft has been adopted by the CFRG as an active [work group draft](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-02)
 
 ## Changelog:
+* Changes from draft-irtf-cfrg-bls-signature-03 to draft-irtf-cfrg-bls-signtuare-04:
+  * KeyGen and KeyValidate updated. KeyValidate now rejects PK if it represents the
+    identity element. KeyGen likewise will not generate SK = 0, which would result
+    in an identity public key.
+  * Security Considerations updated with a discussion of why identity PK is disallowed.
+
 * Changes from draft-irtf-cfrg-bls-signature-02 to draft-irtf-cfrg-bls-signtuare-03:
   * Updated author affiliations
   * Updated hash-to-curve reference to version -09
