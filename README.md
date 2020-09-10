@@ -5,6 +5,10 @@ This repo was moved from [here](https://github.com/pairingwg/bls_standard).
 
 ## News:
 
+* Updated from -02 to -03 and from -03 to -04.
+  * -03 is a compatibility release for existing implementations.
+  * -04 is an update that addresses a potential security concern.
+
 * Updated from -00 to -02. See changelog.
 
 * This draft has been adopted by the CFRG as an active [work group draft](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-02)
