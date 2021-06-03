@@ -118,7 +118,7 @@ organization="Algorand"
   <seriesInfo name="In" value="USENIX Security"/>
   <seriesInfo name="pages" value="205-220"/>
 </reference>
-<reference anchor="ZCash" target="https://github.com/zkcrypto/pairing/blob/master/src/bls12_381/README.md#serialization">
+<reference anchor="ZCash" target="https://github.com/zkcrypto/pairing/tree/34aa52b0f7bef705917252ea63e5a13fa01af551/src/bls12_381">
   <front>
     <title>BLS12-381</title>
     <author>
