@@ -778,8 +778,10 @@ Procedure:
 5. If signature_subgroup_check(R) is INVALID, return INVALID
 6. C1 = 1 (the identity element in GT)
 7. for i in 1, ..., l:
+        if KeyValidate(QK_i_1) is INVALID, return INVALID
 8.      aggregate = pubkey_to_point(QK_i_1)
         for j in 2,...,len(QK_i):
+            If KeyValidate(QK_i_j) is INVALID, return INVALID
 9.          next = pubkey_to_point(QK_i_j)
 10.         aggregate = aggregate + next
 11.      RK_i = point_to_pubkey(aggregate)
