@@ -780,7 +780,7 @@ Procedure:
 7. for i in 1, ..., l:
 8.      aggregate = pubkey_to_point(QK_i_1)
         for j in 2,...,len(QK_i):
-9.          next = pubkey_to_point(PK_i_j)
+9.          next = pubkey_to_point(QK_i_j)
 10.         aggregate = aggregate + next
 11.      RK_i = point_to_pubkey(aggregate)
 12.      If KeyValidate(RK_i) is INVALID, return INVALID
