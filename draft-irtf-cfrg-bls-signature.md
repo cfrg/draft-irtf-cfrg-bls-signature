@@ -771,7 +771,7 @@ Outputs:
 Precondition: n >= 1, otherwise return INVALID.
 
 Procedure:
-1  compute the l distinct messages m_1, m_l
+1  Group the n input messages into l distinct messages, denoted by m_1, ... m_l
 2. Aggregate the public keys of the same message to l sets of public keys QK_1_1, ...,QK_1_m, QK_2_1,..., QK_2_p, ..., QK_l_1,...,QK_l_q   
 3.  R = signature_to_point(signature)
 4.  If R is INVALID, return INVALID
