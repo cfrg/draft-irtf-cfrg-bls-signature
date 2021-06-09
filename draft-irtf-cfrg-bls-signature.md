@@ -785,12 +785,13 @@ Procedure:
 9.          next = pubkey_to_point(QK_i_j)
 10.         aggregate = aggregate + next
 11.      RK_i = point_to_pubkey(aggregate)
-12.      If KeyValidate(RK_i) is INVALID, return INVALID
-13.      xP = pubkey_to_point(RK_i)
-14.      Q = hash_to_point(m_i)
-15.      C1 = C1 * pairing(Q, xP)
-16. C2 = pairing(R, P)
-17. If C1 == C2, return VALID, else return INVALID
+12.      If len(QK_i) > 1: 
+13.         If KeyValidate(RK_i) is INVALID, return INVALID
+14.      xP = pubkey_to_point(RK_i)
+15.      Q = hash_to_point(m_i)
+16.      C1 = C1 * pairing(Q, xP)
+17. C2 = pairing(R, P)
+18. If C1 == C2, return VALID, else return INVALID
 ~~~
 
 # BLS Signatures {#schemes}
