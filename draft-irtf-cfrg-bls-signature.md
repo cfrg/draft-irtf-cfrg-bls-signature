@@ -773,11 +773,11 @@ Precondition: n >= 1, otherwise return INVALID.
 Procedure:
 1  Group the n input messages into l distinct messages, denoted by m_1, ... m_l
 2. Aggregate the public keys of the same message to l sets of public keys QK_1_1, ...,QK_1_m, QK_2_1,..., QK_2_p, ..., QK_l_1,...,QK_l_q   
-3.  R = signature_to_point(signature)
-4.  If R is INVALID, return INVALID
-5.  If signature_subgroup_check(R) is INVALID, return INVALID
-6.  C1 = 1 (the identity element in GT)
-7.  for i in 1, ..., l:
+3. R = signature_to_point(signature)
+4. If R is INVALID, return INVALID
+5. If signature_subgroup_check(R) is INVALID, return INVALID
+6. C1 = 1 (the identity element in GT)
+7. for i in 1, ..., l:
 8.      aggregate = pubkey_to_point(QK_i_1)
         for j in 2,...,len(QK_i):
 9.          next = pubkey_to_point(PK_i_j)
