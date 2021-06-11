@@ -772,7 +772,7 @@ Precondition: n >= 1, otherwise return INVALID.
 
 Procedure:
 1  Group the n input messages into l distinct messages, denoted by m_1, ... m_l
-2. Aggregate the public keys of the same message to l sets of public keys {QK_1_1, ...,QK_1_m}, {QK_2_1,..., QK_2_p}, ..., {QK_l_1,...,QK_l_q}   
+2. Aggregate the public keys of the same message to l sets of public keys QK_set_1 = {QK_1_1, ...,QK_1_m}, QK_set_2 = {QK_2_1,..., QK_2_p}, ..., QK_set_l = {QK_l_1,...,QK_l_q}   
 3. R = signature_to_point(signature)
 4. If R is INVALID, return INVALID
 5. If signature_subgroup_check(R) is INVALID, return INVALID
@@ -780,12 +780,12 @@ Procedure:
 7. for i in 1, ..., l:
         if KeyValidate(QK_i_1) is INVALID, return INVALID
 8.      aggregate = pubkey_to_point(QK_i_1)
-        for j in 2,...,len(QK_i):
+        for j in 2,...,len(QK_set_i):
             If KeyValidate(QK_i_j) is INVALID, return INVALID
 9.          next = pubkey_to_point(QK_i_j)
 10.         aggregate = aggregate + next
 11.      RK_i = point_to_pubkey(aggregate)
-12.      If len(QK_i) > 1: 
+12.      If len(QK_set_1) > 1: 
 13.         If KeyValidate(RK_i) is INVALID, return INVALID
 14.      xP = pubkey_to_point(RK_i)
 15.      Q = hash_to_point(m_i)
