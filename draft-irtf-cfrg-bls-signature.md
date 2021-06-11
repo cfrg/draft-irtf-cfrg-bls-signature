@@ -785,7 +785,7 @@ Procedure:
 9.          next = pubkey_to_point(QK_i_j)
 10.         aggregate = aggregate + next
 11.      RK_i = point_to_pubkey(aggregate)
-12.      If len(QK_set_1) > 1: 
+12.      If len(QK_set_i) > 1: 
 13.         If KeyValidate(RK_i) is INVALID, return INVALID
 14.      xP = pubkey_to_point(RK_i)
 15.      Q = hash_to_point(m_i)
