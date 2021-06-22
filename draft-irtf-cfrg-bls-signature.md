@@ -246,7 +246,23 @@ organization="Algorand"
   <seriesInfo name="In" value="ASIACRYPT"/>
   <seriesInfo name="pages" value="435-464"/>
 </reference>
-
+<reference anchor="GMT19">
+          <front>
+            <title>Cocks–Pinch curves of embedding degrees five to eight and optimal ate pairing computation</title>
+            <seriesInfo name="DOI" value="10.1007/s10623-020-00727-w"/>
+            <seriesInfo name="International Journal of Designs, Codes and Cryptography" value="vol. 88, pp. 1047-1081"/>
+            <author initials="A." surname="Guillevic">
+              <organization/>
+            </author>
+            <author initials="S. " surname="Masson" fullname="Simon Masson">
+              <organization/>
+            </author>
+            <author initials="E." surname="Thome" fullname="Emmanuel Thome">
+              <organization/>
+            </author>
+            <date year="2019"/>
+          </front>
+        </reference>
 .# Abstract
 
 
@@ -310,10 +326,22 @@ and storage requirements.
 ## Comparison with ECDSA
 
 The following comparison assumes BLS signatures with curve BLS12-381, targeting
-128 bits security.
+126 bits of security [@GMT19].
+
+<!-- ISSUE(ZZ): earlier version of `pairing friendly curves` uses the following 
+estimations:
+  * [@MSS17] state that BLS12-381
+  achieves 127-bit security level evaluated by the computational cost
+  of Pollard's rho;
+  * NCC group estimated in [@NCCG] that the security level
+  of BLS12-381 is between 117 and 120 bits at most.  
+
+It is then updated to the [@GMT19] version as stated here. 
+We are useing [@GMT19] estimation to be consistent with `pairing friendly curves`
+-->
 
 For 128 bits security, ECDSA takes 37 and 79 micro-seconds to sign and verify
-a signature on a typical laptop. In comparison, for the same level of security,
+a signature on a typical laptop. In comparison, for a similar level of security,
 BLS takes 370 and 2700 micro-seconds to sign and verify
 a signature.
 
