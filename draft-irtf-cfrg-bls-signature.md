@@ -968,7 +968,7 @@ the standard API ((#blsapi)):
 
 All public keys used by Verify, AggregateVerify, and FastAggregateVerify
 MUST be accompanied by a proof of possession, and the result of evaluating
-PopVerify on the public key and proof MUST be VALID.
+PopVerify on each public key and its proof MUST be VALID.
 
 ### Parameters {#popparams}
 
@@ -1050,6 +1050,13 @@ Procedure:
 
 FastAggregateVerify uses several functions defined in (#coreops).
 
+All public keys passed as arguments to this algorithm MUST have a
+corresponding proof of possession, and the result of evaluating
+PopVerify on each public key and its proof MUST be VALID.
+The caller is responsible for ensuring that this precondition is met.
+If it is violated, this scheme provides no security against aggregate
+signature forgery.
+
 ~~~
 result = FastAggregateVerify((PK_1, ..., PK_n), message, signature)
 
@@ -1061,7 +1068,11 @@ Inputs:
 Outputs:
 - result, either VALID or INVALID.
 
-Precondition: n >= 1, otherwise return INVALID.
+Preconditions:
+- n >= 1, otherwise return INVALID.
+- The caller MUST know a proof of possession for all PK_i, and the
+  result of evaluating PopVerify on PK_i and this proof MUST be VALID.
+  See discussion above.
 
 Procedure:
 1. aggregate = pubkey_to_point(PK_1)
