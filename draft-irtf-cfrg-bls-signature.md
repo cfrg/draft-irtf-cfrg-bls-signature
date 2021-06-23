@@ -1338,7 +1338,7 @@ TBD (consider to register ciphersuite identifiers for BLS signature and underlyi
 The ciphersuites in (#ciphersuites) are based upon the BLS12-381
 pairing-friendly elliptic curve.
 The following defines the correspondence between the primitives
-in (#definitions) and the parameters given in Section 4.2.2 of
+in (#definitions) and the parameters given in Section 4.2.1 of
 [@I-D.irtf-cfrg-pairing-friendly-curves].
 
 - E1, G1: the curve E and its order-r subgroup.
