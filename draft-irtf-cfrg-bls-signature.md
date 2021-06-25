@@ -435,6 +435,9 @@ The following notation and primitives are used:
     canonical representation ostr, or INVALID if ostr is not a valid output
     of point\_to\_octets.
     This operation is also known as deserialization.
+    Note that this function MUST return a point P within the corresponding
+    subgroup of prime order if deserialization is successful, or else 
+    INVALID must be returned.
 
   - subgroup\_check(P) -> VALID or INVALID: returns VALID when the point P
     is an element of the subgroup of order r, and INVALID otherwise.
@@ -574,15 +577,15 @@ In addition, the following primitives are determined by the above parameters:
 
   - For minimal-signature-size:
 
-        pubkey\_to\_point(ostr) := octets\_to\_point\_E2(ostr)
+        pubkey\_to\_point(ostr) := octets\_to\_point\_G2(ostr)
 
-        signature\_to\_point(ostr) := octets\_to\_point\_E1(ostr)
+        signature\_to\_point(ostr) := octets\_to\_point\_G1(ostr)
 
   - For minimal-pubkey-size:
 
-        pubkey\_to\_point(ostr) := octets\_to\_point\_E1(ostr)
+        pubkey\_to\_point(ostr) := octets\_to\_point\_G1(ostr)
 
-        signature\_to\_point(ostr) := octets\_to\_point\_E2(ostr)
+        signature\_to\_point(ostr) := octets\_to\_point\_G2(ostr)
 
 - pubkey\_subgroup\_check and signature\_subgroup\_check, functions
   that invoke the appropriate subgroup check routine ((#definitions))
@@ -696,9 +699,12 @@ Procedure:
 1. xP = pubkey_to_point(PK)
 2. If xP is INVALID, return INVALID
 3. If xP is the identity element, return INVALID
-4. If pubkey_subgroup_check(xP) is INVALID, return INVALID
-5. return VALID
+<!-- 4. If pubkey_subgroup_check(xP) is INVALID, return INVALID -->
+4. return VALID
 ~~~
+
+Note that step 1: xP = pubkey_to_point(PK) ensures that
+xP is in the right subgroup if succeed.
 
 ## CoreSign {#coresign}
 
@@ -741,14 +747,17 @@ Outputs:
 Procedure:
 1. R = signature_to_point(signature)
 2. If R is INVALID, return INVALID
-3. If signature_subgroup_check(R) is INVALID, return INVALID
-4. If KeyValidate(PK) is INVALID, return INVALID
-5. xP = pubkey_to_point(PK)
-6. Q = hash_to_point(message)
-7. C1 = pairing(Q, xP)
-8. C2 = pairing(R, P)
-9. If C1 == C2, return VALID, else return INVALID
+<!-- 3. If signature_subgroup_check(R) is INVALID, return INVALID -->
+3. If KeyValidate(PK) is INVALID, return INVALID
+4. xP = pubkey_to_point(PK)
+5. Q = hash_to_point(message)
+6. C1 = pairing(Q, xP)
+7. C2 = pairing(R, P)
+8. If C1 == C2, return VALID, else return INVALID
 ~~~
+
+Note that step 1: R = signature_to_point(signature) ensures that
+R is in the right subgroup if succeed.
 
 ## Aggregate
 
@@ -778,6 +787,9 @@ Procedure:
 8. return signature
 ~~~
 
+Note that in step 1 and 4, signature_to_point(signature_x) ensures
+that the outputs are in the right subgroup if succeed.
+
 ## CoreAggregateVerify
 
 The CoreAggregateVerify algorithm checks an aggregated signature
@@ -801,16 +813,22 @@ Precondition: n >= 1, otherwise return INVALID.
 Procedure:
 1.  R = signature_to_point(signature)
 2.  If R is INVALID, return INVALID
-3.  If signature_subgroup_check(R) is INVALID, return INVALID
-4.  C1 = 1 (the identity element in GT)
-5.  for i in 1, ..., n:
-6.      If KeyValidate(PK_i) is INVALID, return INVALID
-7.      xP = pubkey_to_point(PK_i)
-8.      Q = hash_to_point(message_i)
-9.      C1 = C1 * pairing(Q, xP)
-10. C2 = pairing(R, P)
-11. If C1 == C2, return VALID, else return INVALID
+<!-- 3.  If signature_subgroup_check(R) is INVALID, return INVALID -->
+3.  C1 = 1 (the identity element in GT)
+4.  for i in 1, ..., n:
+5.      If KeyValidate(PK_i) is INVALID, return INVALID
+6.      xP = pubkey_to_point(PK_i)
+7.      Q = hash_to_point(message_i)
+8.      C1 = C1 * pairing(Q, xP)
+9. C2 = pairing(R, P)
+10. If C1 == C2, return VALID, else return INVALID
 ~~~
+
+
+Note that in step 1 and 6, signature_to_point(signature) 
+and pubkey_to_point(PK_i) 
+ensure that the
+outputs are in the right subgroup if succeed.
 
 # BLS Signatures {#schemes}
 
@@ -1037,13 +1055,13 @@ Outputs:
 Procedure:
 1. R = signature_to_point(proof)
 2. If R is INVALID, return INVALID
-3. If signature_subgroup_check(R) is INVALID, return INVALID
-4. If KeyValidate(PK) is INVALID, return INVALID
-5. xP = pubkey_to_point(PK)
-6. Q = hash_pubkey_to_point(PK)
-7. C1 = pairing(Q, xP)
-8. C2 = pairing(R, P)
-9. If C1 == C2, return VALID, else return INVALID
+<!-- 3. If signature_subgroup_check(R) is INVALID, return INVALID -->
+3. If KeyValidate(PK) is INVALID, return INVALID
+4. xP = pubkey_to_point(PK)
+5. Q = hash_pubkey_to_point(PK)
+6. C1 = pairing(Q, xP)
+7. C2 = pairing(R, P)
+8. If C1 == C2, return VALID, else return INVALID
 ~~~
 
 ### FastAggregateVerify
@@ -1297,6 +1315,9 @@ This check is REQUIRED of conforming implementations, for two reasons.
    the correct subgroups, skipping the subgroup check breaks the strong
    unforgeability property [@ADR02].
 
+In this draft, the subgroup checks are implicit ((#definitions)) when 
+octets\_to\_point(ostr) is invoked.    
+
 ## Side channel attacks
 
 Implementations of the signing algorithm SHOULD protect the secret key
@@ -1333,6 +1354,9 @@ In addition, ciphersuites MUST specify unique domain separation tags
 for hash\_to\_point and hash\_pubkey\_to\_point.
 The domain separation tag format used in (#ciphersuites) is the RECOMMENDED one.
 
+<!-- ZZ note:  
+This section is no longer relavent -- there are too many implementations of BLS 
+signatures and it becomes impossible to track them.
 # Implementation Status
 
 This section will be removed in the final version of the draft.
@@ -1350,6 +1374,7 @@ Chia uses the Fouque-Tibouchi hashing to the curve, which can be done in constan
 * Dfinity: [go](https://github.com/dfinity/go-dfinity-crypto) [BLS](https://github.com/dfinity/bls).  The current implementations do not seem to implement the membership check.
 
 * Ethereum 2.0: [spec](https://github.com/ethereum/eth2.0-specs/blob/master/specs/bls_signature.md).
+-->
 
 # Related Standards
 
