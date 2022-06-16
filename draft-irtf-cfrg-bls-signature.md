@@ -35,7 +35,7 @@ organization="University of Waterloo"
 initials="R."
 surname="Wahby"
 fullname="Riad S. Wahby"
-organization="Stanford University"
+organization="Carnegie Mellon University"
  [author.address]
  email = "rsw@cs.stanford.edu"
   [author.address.postal]
@@ -50,6 +50,16 @@ organization="NTT Research and ENS, Paris"
  email = "wee@di.ens.fr"
   [author.address.postal]
   city = "Boston, MA"
+  country = "USA"
+[[author]]
+initials="C."
+surname="Wood"
+fullname="Christopher A. Wood"
+organization="Cloudflare, Inc."
+ [author.address]
+ email = "caw@heapingbits.net"
+  [author.address.postal]
+  city = "San Francisco, CA"
   country = "USA"
 [[author]]
 initials="Z."
