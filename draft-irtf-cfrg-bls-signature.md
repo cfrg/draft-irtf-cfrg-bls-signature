@@ -73,6 +73,15 @@ organization="Algorand"
   country = "USA"
 %%%
 
+<reference anchor="Scott21" target="https://eprint.iacr.org/2021/1130.pdf">
+  <front>
+    <title>A note on group membership tests for G1, G2 and GT on BLS pairing-friendly curves</title>
+    <author initials="M." surname="Scott" fullname="Michael Scott">
+      <organization>Technical Innovation Institute</organization>
+    </author>
+    <date year="2021" month="September"/>
+  </front>
+</reference>
 <reference anchor="Bowe19" target="https://eprint.iacr.org/2019/814">
   <front>
     <title>Faster subgroup checks for BLS12-381</title>
@@ -450,7 +459,7 @@ The following notation and primitives are used:
     is an element of the subgroup of order r, and INVALID otherwise.
     This function can always be implemented by checking that r \* P is equal
     to the identity element. In some cases, faster checks may also exist,
-    e.g., [@Bowe19].
+    e.g., [@Bowe19, @Scott21].
 
 * I2OSP and OS2IP are the functions defined in [@RFC8017], Section 4.
 
@@ -1417,7 +1426,7 @@ in (#definitions) and the parameters given in Section 4.2.1 of
   serialization formats for E1 and E2 defined by [@!ZCash].
 
 - subgroup\_check MAY use either the naive check described
-  in (#definitions) or the optimized check given by [@Bowe19].
+  in (#definitions) or the optimized checks given by [@Bowe19] or [@Scott21].
 
 # Test Vectors
 
