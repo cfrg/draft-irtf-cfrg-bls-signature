@@ -660,11 +660,11 @@ Definitions:
 Procedure:
 1. while True:
 2.     PRK = HKDF-Extract(salt, IKM || I2OSP(0, 1))
-4.     OKM = HKDF-Expand(PRK, key_info || I2OSP(L, 2), L)
-5.     SK = OS2IP(OKM) mod r
-6.     if SK != 0:
-7.         return SK
-8.     salt = H(salt)
+3.     OKM = HKDF-Expand(PRK, key_info || I2OSP(L, 2), L)
+4.     SK = OS2IP(OKM) mod r
+5.     if SK != 0:
+6.         return SK
+7.     salt = H(salt)
 ~~~
 
 KeyGen is the RECOMMENDED way of generating secret keys, but its use is not
