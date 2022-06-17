@@ -811,7 +811,7 @@ Procedure:
 ## CoreAggregateVerify
 
 The CoreAggregateVerify algorithm checks an aggregated signature
-over several (PK, message) pairs.
+over several (PK, message) pairs. This function first aggregates public keys of the same message.
 
 ~~~
 result = CoreAggregateVerify((PK_1, ..., PK_n),
@@ -829,17 +829,27 @@ Outputs:
 Precondition: n >= 1, otherwise return INVALID.
 
 Procedure:
-1.  R = signature_to_point(signature)
-2.  If R is INVALID, return INVALID
-3.  If signature_subgroup_check(R) is INVALID, return INVALID
-4.  C1 = 1 (the identity element in GT)
-5.  for i in 1, ..., n:
-6.      If KeyValidate(PK_i) is INVALID, return INVALID
-7.      xP = pubkey_to_point(PK_i)
-8.      Q = hash_to_point(message_i)
-9.      C1 = C1 * pairing(Q, xP)
-10. C2 = pairing(R, P)
-11. If C1 == C2, return VALID, else return INVALID
+1  Group the n input messages into l distinct messages, denoted by m_1, ... m_l
+2. Aggregate the public keys of the same message to l sets of public keys QK_set_1 = {QK_1_1, ...,QK_1_m}, QK_set_2 = {QK_2_1,..., QK_2_p}, ..., QK_set_l = {QK_l_1,...,QK_l_q}   
+3. R = signature_to_point(signature)
+4. If R is INVALID, return INVALID
+5. If signature_subgroup_check(R) is INVALID, return INVALID
+6. C1 = 1 (the identity element in GT)
+7. for i in 1, ..., l:
+        if KeyValidate(QK_i_1) is INVALID, return INVALID
+8.      aggregate = pubkey_to_point(QK_i_1)
+        for j in 2,...,len(QK_set_i):
+            If KeyValidate(QK_i_j) is INVALID, return INVALID
+9.          next = pubkey_to_point(QK_i_j)
+10.         aggregate = aggregate + next
+11.      RK_i = point_to_pubkey(aggregate)
+12.      If len(QK_set_i) > 1: 
+13.         If KeyValidate(RK_i) is INVALID, return INVALID
+14.      xP = pubkey_to_point(RK_i)
+15.      Q = hash_to_point(m_i)
+16.      C1 = C1 * pairing(Q, xP)
+17. C2 = pairing(R, P)
+18. If C1 == C2, return VALID, else return INVALID
 ~~~
 
 # BLS Signatures {#schemes}
