@@ -1,0 +1,1412 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.miek.nl" -->
+<rfc version="3" ipr="trust200902" docName="draft-irtf-cfrg-bls-signature-05" submissionType="IETF" category="info" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" consensus="true">
+
+<front>
+<title abbrev="BLS-signature">BLS Signatures</title><seriesInfo value="draft-irtf-cfrg-bls-signature-05" status="informational" name="Internet-Draft"></seriesInfo>
+<author initials="D." surname="Boneh" fullname="Dan Boneh"><organization>Stanford University</organization><address><postal><street></street>
+<country>USA</country>
+</postal><email>dabo@cs.stanford.edu</email>
+</address></author>
+<author initials="S." surname="Gorbunov" fullname="Sergey Gorbunov"><organization>University of Waterloo</organization><address><postal><street></street>
+<city>Waterloo, ON</city>
+<country>Canada</country>
+</postal><email>sgorbunov@uwaterloo.ca</email>
+</address></author>
+<author initials="R." surname="Wahby" fullname="Riad S. Wahby"><organization>Carnegie Mellon University</organization><address><postal><street></street>
+<country>USA</country>
+</postal><email>rsw@cs.stanford.edu</email>
+</address></author>
+<author initials="H." surname="Wee" fullname="Hoeteck Wee"><organization>NTT Research and ENS, Paris</organization><address><postal><street></street>
+<city>Boston, MA</city>
+<country>USA</country>
+</postal><email>wee@di.ens.fr</email>
+</address></author>
+<author initials="C." surname="Wood" fullname="Christopher A. Wood"><organization>Cloudflare, Inc.</organization><address><postal><street></street>
+<city>San Francisco, CA</city>
+<country>USA</country>
+</postal><email>caw@heapingbits.net</email>
+</address></author>
+<author initials="Z." surname="Zhang" fullname="Zhenfei Zhang"><organization>Algorand</organization><address><postal><street></street>
+<city>Boston, MA</city>
+<country>USA</country>
+</postal><email>zhenfei@algorand.com</email>
+</address></author>
+<date/>
+<area>Internet</area>
+<workgroup>CFRG</workgroup>
+
+<abstract>
+<t>BLS is a digital signature scheme with aggregation properties.
+Given set of signatures (signature_1, ..., signature_n) anyone can produce
+an aggregated signature. Aggregation can also be done on secret keys and
+public keys. Furthermore, the BLS signature scheme is deterministic, non-malleable,
+and efficient. Its simplicity and cryptographic properties allows it
+to be useful in a variety of use-cases, specifically when minimal
+storage space or bandwidth are required.</t>
+</abstract>
+
+</front>
+
+<middle>
+
+<section anchor="introduction"><name>Introduction</name>
+<t>A signature scheme is a fundamental cryptographic primitive
+that is used to protect authenticity and integrity of communication.
+Only the holder of a secret key can sign messages, but anyone can
+verify the signature using the associated public key.</t>
+<t>Signature schemes are used in point-to-point secure communication
+protocols, PKI, remote connections, etc.
+Designing efficient and secure digital signature is very important
+for these applications.</t>
+<t>This document describes the BLS signature scheme. The scheme enjoys a variety
+of important efficiency properties:</t>
+
+<ol>
+<li>The public key and the signatures are encoded as single group elements.</li>
+<li>Verification requires 2 pairing operations.</li>
+<li>A collection of signatures (signature_1, ..., signature_n) can be aggregated
+into a single signature. Moreover, the aggregate signature can
+be verified using only n+1 pairings (as opposed to 2n pairings, when verifying
+n signatures separately).</li>
+</ol>
+<t>Given the above properties,
+the scheme enables many interesting applications.
+The immediate applications include</t>
+
+<ul>
+<li><t>Authentication and integrity for Public Key Infrastructure (PKI) and blockchains.</t>
+
+<ul>
+<li>The usage is similar to classical digital signatures, such as ECDSA.</li>
+</ul></li>
+<li><t>Aggregating signature chains for PKI and Secure Border Gateway Protocol (SBGP).</t>
+
+<ul>
+<li>Concretely, in a PKI signature chain of depth n, we have n signatures by n
+certificate authorities on n distinct certificates. Similarly, in SBGP,
+each router receives a list of n signatures attesting to a path of length n
+in the network. In both settings, using the BLS signature scheme would allow us
+to aggregate the n signatures into a single signature.</li>
+</ul></li>
+<li><t>consensus protocols for blockchains.</t>
+
+<ul>
+<li>There, BLS signatures
+are used for authenticating transactions as well as votes during the consensus
+protocol, and the use of aggregation significantly reduces the bandwidth
+and storage requirements.</li>
+</ul></li>
+</ul>
+
+<section anchor="comparison-with-ecdsa"><name>Comparison with ECDSA</name>
+<t>The following comparison assumes BLS signatures with curve BLS12-381, targeting
+126 bits of security <xref target="GMT19"></xref>.</t>
+<t>For 128 bits security, ECDSA takes 37 and 79 micro-seconds to sign and verify
+a signature on a typical laptop. In comparison, for a similar level of security,
+BLS takes 370 and 2700 micro-seconds to sign and verify
+a signature.</t>
+<t>In terms of sizes, ECDSA uses 32 bytes for public keys and  64 bytes for signatures;
+while BLS uses 96 bytes for public keys, and  48 bytes for signatures.
+Alternatively, BLS can also be instantiated with 48 bytes of public keys and 96 bytes
+of signatures.
+BLS also allows for signature aggregation. In other words, a single signature is
+sufficient to authenticate multiple messages and public keys.</t>
+</section>
+
+<section anchor="organization-of-this-document"><name>Organization of this document</name>
+<t>This document is organized as follows:</t>
+
+<ul>
+<li><t>The remainder of this section defines terminology and the high-level API.</t>
+</li>
+<li><t><xref target="coreops"></xref> defines primitive operations used in the BLS signature scheme.
+These operations MUST NOT be used alone.</t>
+</li>
+<li><t><xref target="schemes"></xref> defines three BLS Signature schemes giving slightly different
+security and performance properties.</t>
+</li>
+<li><t><xref target="ciphersuites"></xref> defines the format for a ciphersuites and gives recommended ciphersuites.</t>
+</li>
+<li><t>The appendices give test vectors, etc.</t>
+</li>
+</ul>
+</section>
+
+<section anchor="definitions"><name>Terminology and definitions</name>
+<t>The following terminology is used through this document:</t>
+
+<ul>
+<li><t>SK:  The secret key for the signature scheme.</t>
+</li>
+<li><t>PK:  The public key for the signature scheme.</t>
+</li>
+<li><t>message:  The input to be signed by the signature scheme.</t>
+</li>
+<li><t>signature:  The digital signature output.</t>
+</li>
+<li><t>aggregation:  Given a list of signatures for a list of messages and public keys,
+an aggregation algorithm generates one signature that authenticates the same
+list of messages and public keys.</t>
+</li>
+<li><t>rogue key attack:
+An attack in which a specially crafted public key (the &quot;rogue&quot; key) is used
+to forge an aggregated signature.
+<xref target="schemes"></xref> specifies methods for securing against rogue key attacks.</t>
+</li>
+</ul>
+<t>The following notation and primitives are used:</t>
+
+<ul>
+<li><t>a || b denotes the concatenation of octet strings a and b.</t>
+</li>
+<li><t>A pairing-friendly elliptic curve defines the following primitives
+(see <xref target="I-D.irtf-cfrg-pairing-friendly-curves"></xref> for detailed discussion):</t>
+
+<ul>
+<li><t>E1, E2: elliptic curve groups defined over finite fields.
+This document assumes that E1 has a more compact representation than
+E2, i.e., because E1 is defined over a smaller field than E2.</t>
+</li>
+<li><t>G1, G2: subgroups of E1 and E2 (respectively) having prime order r.</t>
+</li>
+<li><t>P1, P2: distinguished points that generate G1 and G2, respectively.</t>
+</li>
+<li><t>GT: a subgroup, of prime order r, of the multiplicative group of a field extension.</t>
+</li>
+<li><t>e : G1 x G2 -&gt; GT: a non-degenerate bilinear map.</t>
+</li>
+</ul></li>
+<li><t>For the above pairing-friendly curve, this document
+writes operations in E1 and E2 in additive notation, i.e.,
+P + Q denotes point addition and x * P denotes scalar multiplication.
+Operations in GT are written in multiplicative notation, i.e., a * b
+is field multiplication.</t>
+</li>
+</ul>
+
+<ul>
+<li><t>For each of E1 and E2 defined by the above pairing-friendly curve,
+we assume that the pairing-friendly elliptic curve definition provides
+several primitives, described below.</t>
+<t>Note that these primitives are named generically.
+When referring to one of these primitives for a specific group,
+this document appends the name of the group, e.g.,
+point_to_octets_E1, subgroup_check_E2, etc.</t>
+
+<ul>
+<li><t>point_to_octets(P) -&gt; ostr: returns the canonical representation of
+the point P as an octet string.
+This operation is also known as serialization.</t>
+</li>
+<li><t>octets_to_point(ostr) -&gt; P: returns the point P corresponding to the
+canonical representation ostr, or INVALID if ostr is not a valid output
+of point_to_octets.
+This operation is also known as deserialization.</t>
+</li>
+<li><t>subgroup_check(P) -&gt; VALID or INVALID: returns VALID when the point P
+is an element of the subgroup of order r, and INVALID otherwise.
+This function can always be implemented by checking that r * P is equal
+to the identity element. In some cases, faster checks may also exist,
+e.g., <xref target="Bowe19"></xref>.</t>
+</li>
+</ul></li>
+<li><t>I2OSP and OS2IP are the functions defined in <xref target="RFC8017"></xref>, Section 4.</t>
+</li>
+<li><t>hash_to_point(ostr) -&gt; P: a cryptographic hash function that takes as input an
+arbitrary octet string and returns a point on an elliptic curve.
+Functions of this kind are defined in <xref target="I-D.irtf-cfrg-hash-to-curve"></xref>.
+Each of the ciphersuites in <xref target="ciphersuites"></xref> specifies the hash_to_point
+algorithm to be used.</t>
+</li>
+</ul>
+</section>
+
+<section anchor="blsapi"><name>API</name>
+<t>The BLS signature scheme defines the following API:</t>
+
+<ul>
+<li><t>KeyGen(IKM) -&gt; SK: a key generation algorithm that
+takes as input an octet string comprising secret keying material,
+and outputs a secret key SK.</t>
+</li>
+<li><t>SkToPk(SK) -&gt; PK: an algorithm that takes as input a secret key
+and outputs the corresponding public key.</t>
+</li>
+<li><t>Sign(SK, message) -&gt; signature: a signing algorithm that generates a
+deterministic signature given a secret key SK and a message.</t>
+</li>
+<li><t>Verify(PK, message, signature) -&gt; VALID or INVALID:
+a verification algorithm that outputs VALID if signature is a valid
+signature of message under public key PK, and INVALID otherwise.</t>
+</li>
+<li><t>Aggregate((signature_1, ..., signature_n)) -&gt; signature:
+an aggregation algorithm that aggregates a collection of signatures
+into a single signature.</t>
+</li>
+<li><t>AggregateVerify((PK_1, ..., PK_n), (message_1, ..., message_n), signature) -&gt; VALID or INVALID:
+an aggregate verification algorithm that outputs VALID if signature
+is a valid aggregated signature for a collection of public keys and messages,
+and outputs INVALID otherwise.</t>
+</li>
+</ul>
+</section>
+
+<section anchor="requirements"><name>Requirements</name>
+<t>The key words &quot;MUST&quot;, &quot;MUST NOT&quot;, &quot;REQUIRED&quot;, &quot;SHALL&quot;, &quot;SHALL NOT&quot;,
+&quot;SHOULD&quot;, &quot;SHOULD NOT&quot;, &quot;RECOMMENDED&quot;, &quot;MAY&quot;, and &quot;OPTIONAL&quot; in this
+document are to be interpreted as described in <xref target="RFC2119"></xref>.</t>
+</section>
+</section>
+
+<section anchor="coreops"><name>Core operations</name>
+<t>This section defines core operations used by the schemes defined in <xref target="schemes"></xref>.
+These operations MUST NOT be used except as described in that section.</t>
+
+<section anchor="corevariants"><name>Variants</name>
+<t>Each core operation has two variants that trade off signature
+and public key size:</t>
+
+<ol>
+<li><t>Minimal-signature-size: signatures are points in G1,
+public keys are points in G2.
+(Recall from <xref target="definitions"></xref> that E1 has a more compact representation than E2.)</t>
+</li>
+<li><t>Minimal-pubkey-size: public keys are points in G1,
+signatures are points in G2.</t>
+<t>Implementations using signature aggregation SHOULD use this approach,
+since the size of (PK_1, ..., PK_n, signature) is dominated by
+the public keys even for small n.</t>
+</li>
+</ol>
+</section>
+
+<section anchor="coreparams"><name>Parameters</name>
+<t>The core operations in this section depend on several parameters:</t>
+
+<ul>
+<li><t>A signature variant, either minimal-signature-size or minimal-pubkey-size.
+These are defined in <xref target="corevariants"></xref>.</t>
+</li>
+<li><t>A pairing-friendly elliptic curve, plus associated functionality
+given in <xref target="definitions"></xref>.</t>
+</li>
+<li><t>H, a hash function that MUST be a secure cryptographic hash function,
+e.g., SHA-256 <xref target="FIPS180-4"></xref>.
+For security, H MUST output at least ceil(log2(r)) bits, where r is
+the order of the subgroups G1 and G2 defined by the pairing-friendly
+elliptic curve.</t>
+</li>
+<li><t>hash_to_point, a function whose interface is described in <xref target="definitions"></xref>.
+When the signature variant is minimal-signature-size, this function
+MUST output a point in G1.
+When the signature variant is minimal-pubkey size, this function
+MUST output a point in G2.
+For security, this function MUST be either a random oracle encoding or a
+nonuniform encoding, as defined in <xref target="I-D.irtf-cfrg-hash-to-curve"></xref>.</t>
+</li>
+</ul>
+<t>In addition, the following primitives are determined by the above parameters:</t>
+
+<ul>
+<li><t>P, an elliptic curve point.
+When the signature variant is minimal-signature-size, P is the
+distinguished point P2 that generates the group G2 (see <xref target="definitions"></xref>).
+When the signature variant is minimal-pubkey-size, P is the
+distinguished point P1 that generates the group G1.</t>
+</li>
+<li><t>r, the order of the subgroups G1 and G2 defined by the pairing-friendly curve.</t>
+</li>
+<li><t>pairing, a function that invokes the function e of <xref target="definitions"></xref>,
+with argument order depending on signature variant:</t>
+
+<ul>
+<li><t>For minimal-signature-size:</t>
+<t>pairing(U, V) := e(U, V)</t>
+</li>
+<li><t>For minimal-pubkey-size:</t>
+<t>pairing(U, V) := e(V, U)</t>
+</li>
+</ul></li>
+<li><t>point_to_pubkey and point_to_signature, functions that invoke the
+appropriate serialization routine (<xref target="definitions"></xref>) depending on
+signature variant:</t>
+
+<ul>
+<li><t>For minimal-signature-size:</t>
+<t>point_to_pubkey(P) := point_to_octets_E2(P)</t>
+<t>point_to_signature(P) := point_to_octets_E1(P)</t>
+</li>
+<li><t>For minimal-pubkey-size:</t>
+<t>point_to_pubkey(P) := point_to_octets_E1(P)</t>
+<t>point_to_signature(P) := point_to_octets_E2(P)</t>
+</li>
+</ul></li>
+<li><t>pubkey_to_point and signature_to_point, functions that invoke the
+appropriate deserialization routine (<xref target="definitions"></xref>) depending on
+signature variant:</t>
+
+<ul>
+<li><t>For minimal-signature-size:</t>
+<t>pubkey_to_point(ostr) := octets_to_point_E2(ostr)</t>
+<t>signature_to_point(ostr) := octets_to_point_E1(ostr)</t>
+</li>
+<li><t>For minimal-pubkey-size:</t>
+<t>pubkey_to_point(ostr) := octets_to_point_E1(ostr)</t>
+<t>signature_to_point(ostr) := octets_to_point_E2(ostr)</t>
+</li>
+</ul></li>
+<li><t>pubkey_subgroup_check and signature_subgroup_check, functions
+that invoke the appropriate subgroup check routine (<xref target="definitions"></xref>)
+depending on signature variant:</t>
+
+<ul>
+<li><t>For minimal-signature-size:</t>
+<t>pubkey_subgroup_check(P) := subgroup_check_E2(P)</t>
+<t>signature_subgroup_check(P) := subgroup_check_E1(P)</t>
+</li>
+<li><t>For minimal-pubkey-size:</t>
+<t>pubkey_subgroup_check(P) := subgroup_check_E1(P)</t>
+<t>signature_subgroup_check(P) := subgroup_check_E2(P)</t>
+</li>
+</ul></li>
+</ul>
+</section>
+
+<section anchor="keygen"><name>KeyGen</name>
+<t>The KeyGen procedure described in this section generates a secret key SK
+deterministically from a secret octet string IKM.
+SK is guaranteed to be nonzero, as required by KeyValidate (<xref target="keyvalidate"></xref>).</t>
+<t>KeyGen uses HKDF <xref target="RFC5869"></xref> instantiated with the hash function H.</t>
+<t>For security, IKM MUST be infeasible to guess, e.g.,
+generated by a trusted source of randomness.
+IKM MUST be at least 32 bytes long, but it MAY be longer.</t>
+<t>KeyGen takes two parameters. The first parameter, salt, is required;
+see below for further discussion of this value.
+The second parameter, key_info, is optional; it MAY be used to
+derive multiple independent keys from the same IKM.
+By default, key_info is the empty string.</t>
+
+<artwork>SK = KeyGen(IKM)
+
+Inputs:
+- IKM, a secret octet string. See requirements above.
+
+Outputs:
+- SK, a uniformly random integer such that 1 &lt;= SK &lt; r.
+
+Parameters:
+- salt, a required octet string.
+- key_info, an optional octet string.
+  If key_info is not supplied, it defaults to the empty string.
+
+Definitions:
+- HKDF-Extract is as defined in RFC5869, instantiated with hash H.
+- HKDF-Expand is as defined in RFC5869, instantiated with hash H.
+- I2OSP and OS2IP are as defined in RFC8017, Section 4.
+- L is the integer given by ceil((3 * ceil(log2(r))) / 16).
+
+Procedure:
+1. while True:
+2.     PRK = HKDF-Extract(salt, IKM || I2OSP(0, 1))
+3.     OKM = HKDF-Expand(PRK, key_info || I2OSP(L, 2), L)
+4.     SK = OS2IP(OKM) mod r
+5.     if SK != 0:
+6.         return SK
+7.     salt = H(salt)
+</artwork>
+<t>KeyGen is the RECOMMENDED way of generating secret keys, but its use is not
+required for compatibility, and implementations MAY use a different KeyGen
+procedure. For security, such an alternative KeyGen procedure MUST output SK
+that is statistically close to uniformly random in the range 1 &lt;= SK &lt; r.</t>
+<t>For compatibility with prior versions of this document, implementations
+SHOULD allow applications to choose the salt value.
+Setting salt to the value H(&quot;BLS-SIG-KEYGEN-SALT-&quot;) (i.e., the hash of an
+ASCII string comprising 20 octets) results in a KeyGen algorithm that is
+compatible with version 4 of this document.
+Setting salt to the value &quot;BLS-SIG-KEYGEN-SALT-&quot; (i.e., an ASCII string
+comprising 20 octets) results in a KeyGen algorithm that is compatible with
+versions of this document prior to number 4.
+See <xref target="choosesalt"></xref> for more information on choosing a salt value.</t>
+</section>
+
+<section anchor="sktopk"><name>SkToPk</name>
+<t>The SkToPk algorithm takes a secret key SK and outputs the corresponding
+public key PK.
+<xref target="keygen"></xref> discusses requirements for SK.</t>
+
+<artwork>PK = SkToPk(SK)
+
+Inputs:
+- SK, a secret integer such that 1 &lt;= SK &lt; r.
+
+Outputs:
+- PK, a public key encoded as an octet string.
+
+Procedure:
+1. xP = SK * P
+2. PK = point_to_pubkey(xP)
+3. return PK
+</artwork>
+</section>
+
+<section anchor="keyvalidate"><name>KeyValidate</name>
+<t>The KeyValidate algorithm ensures that a public key is valid.
+In particular, it ensures that a public key represents a valid,
+non-identity point that is in the correct subgroup.
+See <xref target="pubkeyvalid"></xref> for further discussion.</t>
+<t>As an optimization, implementations MAY cache the result of KeyValidate
+in order to avoid unnecessarily repeating validation for known keys.</t>
+
+<artwork>result = KeyValidate(PK)
+
+Inputs:
+- PK, a public key in the format output by SkToPk.
+
+Outputs:
+- result, either VALID or INVALID
+
+Procedure:
+1. xP = pubkey_to_point(PK)
+2. If xP is INVALID, return INVALID
+3. If xP is the identity element, return INVALID
+4. If pubkey_subgroup_check(xP) is INVALID, return INVALID
+5. return VALID
+</artwork>
+</section>
+
+<section anchor="coresign"><name>CoreSign</name>
+<t>The CoreSign algorithm computes a signature from SK, a secret key,
+and message, an octet string.</t>
+
+<artwork>signature = CoreSign(SK, message)
+
+Inputs:
+- SK, a secret key in the format output by KeyGen.
+- message, an octet string.
+
+Outputs:
+- signature, an octet string.
+
+Procedure:
+1. Q = hash_to_point(message)
+2. R = SK * Q
+3. signature = point_to_signature(R)
+4. return signature
+</artwork>
+</section>
+
+<section anchor="coreverify"><name>CoreVerify</name>
+<t>The CoreVerify algorithm checks that a signature is valid for
+the octet string message under the public key PK.</t>
+
+<artwork>result = CoreVerify(PK, message, signature)
+
+Inputs:
+- PK, a public key in the format output by SkToPk.
+- message, an octet string.
+- signature, an octet string in the format output by CoreSign.
+
+Outputs:
+- result, either VALID or INVALID.
+
+Procedure:
+1. R = signature_to_point(signature)
+2. If R is INVALID, return INVALID
+3. If signature_subgroup_check(R) is INVALID, return INVALID
+4. If KeyValidate(PK) is INVALID, return INVALID
+5. xP = pubkey_to_point(PK)
+6. Q = hash_to_point(message)
+7. C1 = pairing(Q, xP)
+8. C2 = pairing(R, P)
+9. If C1 == C2, return VALID, else return INVALID
+</artwork>
+</section>
+
+<section anchor="aggregate"><name>Aggregate</name>
+<t>The Aggregate algorithm aggregates multiple signatures into one.</t>
+
+<artwork>signature = Aggregate((signature_1, ..., signature_n))
+
+Inputs:
+- signature_1, ..., signature_n, octet strings output by
+  either CoreSign or Aggregate.
+
+Outputs:
+- signature, an octet string encoding a aggregated signature
+  that combines all inputs; or INVALID.
+
+Precondition: n &gt;= 1, otherwise return INVALID.
+
+Procedure:
+1. aggregate = signature_to_point(signature_1)
+2. If aggregate is INVALID, return INVALID
+3. for i in 2, ..., n:
+4.     next = signature_to_point(signature_i)
+5.     If next is INVALID, return INVALID
+6.     aggregate = aggregate + next
+7. signature = point_to_signature(aggregate)
+8. return signature
+</artwork>
+</section>
+
+<section anchor="coreaggregateverify"><name>CoreAggregateVerify</name>
+<t>The CoreAggregateVerify algorithm checks an aggregated signature
+over several (PK, message) pairs.</t>
+
+<artwork>result = CoreAggregateVerify((PK_1, ..., PK_n),
+                             (message_1, ... message_n),
+                             signature)
+
+Inputs:
+- PK_1, ..., PK_n, public keys in the format output by SkToPk.
+- message_1, ..., message_n, octet strings.
+- signature, an octet string output by Aggregate.
+
+Outputs:
+- result, either VALID or INVALID.
+
+Precondition: n &gt;= 1, otherwise return INVALID.
+
+Procedure:
+1.  R = signature_to_point(signature)
+2.  If R is INVALID, return INVALID
+3.  If signature_subgroup_check(R) is INVALID, return INVALID
+4.  C1 = 1 (the identity element in GT)
+5.  for i in 1, ..., n:
+6.      If KeyValidate(PK_i) is INVALID, return INVALID
+7.      xP = pubkey_to_point(PK_i)
+8.      Q = hash_to_point(message_i)
+9.      C1 = C1 * pairing(Q, xP)
+10. C2 = pairing(R, P)
+11. If C1 == C2, return VALID, else return INVALID
+</artwork>
+</section>
+</section>
+
+<section anchor="schemes"><name>BLS Signatures</name>
+<t>This section defines three signature schemes: basic, message augmentation,
+and proof of possession.
+These schemes differ in the ways that they defend against rogue key
+attacks (<xref target="definitions"></xref>).</t>
+<t>All of the schemes in this section are built on a set of core operations
+defined in <xref target="coreops"></xref>.
+Thus, defining a scheme requires fixing a set of parameters as
+defined in <xref target="coreparams"></xref>.</t>
+<t>All three schemes expose the KeyGen, SkToPk, and Aggregate operations
+that are defined in <xref target="coreops"></xref>.
+The sections below define the other API functions (<xref target="blsapi"></xref>)
+for each scheme.</t>
+
+<section anchor="schemenul"><name>Basic scheme</name>
+<t>In a basic scheme, rogue key attacks are handled by requiring
+all messages signed by an aggregate signature to be distinct.
+This requirement is enforced in the definition of AggregateVerify.</t>
+<t>The Sign and Verify functions are identical to CoreSign and
+CoreVerify (<xref target="coreops"></xref>), respectively.
+AggregateVerify is defined below.</t>
+
+<section anchor="aggregateverify"><name>AggregateVerify</name>
+<t>This function first ensures that all messages are distinct, and then
+invokes CoreAggregateVerify.</t>
+
+<artwork>result = AggregateVerify((PK_1, ..., PK_n),
+                         (message_1, ..., message_n),
+                         signature)
+
+Inputs:
+- PK_1, ..., PK_n, public keys in the format output by SkToPk.
+- message_1, ..., message_n, octet strings.
+- signature, an octet string output by Aggregate.
+
+Outputs:
+- result, either VALID or INVALID.
+
+Precondition: n &gt;= 1, otherwise return INVALID.
+
+Procedure:
+1. If any two input messages are equal, return INVALID.
+2. return CoreAggregateVerify((PK_1, ..., PK_n),
+                              (message_1, ..., message_n),
+                              signature)
+</artwork>
+</section>
+</section>
+
+<section anchor="schemeaug"><name>Message augmentation</name>
+<t>In a message augmentation scheme, signatures are generated
+over the concatenation of the public key and the message,
+ensuring that messages signed by different public keys are
+distinct.</t>
+
+<section anchor="sign"><name>Sign</name>
+<t>To match the API for Sign defined in <xref target="blsapi"></xref>, this function
+recomputes the public key corresponding to the input SK.
+Implementations MAY instead implement an interface that takes
+the public key as an input.</t>
+<t>Note that the point P and the point_to_pubkey function are
+defined in <xref target="coreparams"></xref>.</t>
+
+<artwork>signature = Sign(SK, message)
+
+Inputs:
+- SK, a secret key in the format output by KeyGen.
+- message, an octet string.
+
+Outputs:
+- signature, an octet string.
+
+Procedure:
+1. PK = SkToPk(SK)
+2. return CoreSign(SK, PK || message)
+</artwork>
+</section>
+
+<section anchor="verify"><name>Verify</name>
+
+<artwork>result = Verify(PK, message, signature)
+
+Inputs:
+- PK, a public key in the format output by SkToPk.
+- message, an octet string.
+- signature, an octet string in the format output by CoreSign.
+
+Outputs:
+- result, either VALID or INVALID.
+
+Procedure:
+1. return CoreVerify(PK, PK || message, signature)
+</artwork>
+</section>
+
+<section anchor="aggregateverify-1"><name>AggregateVerify</name>
+
+<artwork>result = AggregateVerify((PK_1, ..., PK_n),
+                         (message_1, ..., message_n),
+                         signature)
+
+Inputs:
+- PK_1, ..., PK_n, public keys in the format output by SkToPk.
+- message_1, ..., message_n, octet strings.
+- signature, an octet string output by Aggregate.
+
+Outputs:
+- result, either VALID or INVALID.
+
+Precondition: n &gt;= 1, otherwise return INVALID.
+
+Procedure:
+1. for i in 1, ..., n:
+2.     mprime_i = PK_i || message_i
+3. return CoreAggregateVerify((PK_1, ..., PK_n),
+                              (mprime_1, ..., mprime_n),
+                              signature)
+</artwork>
+</section>
+</section>
+
+<section anchor="schemepop"><name>Proof of possession</name>
+<t>A proof of possession scheme uses a separate public key
+validation step, called a proof of possession, to defend against
+rogue key attacks.
+This enables an optimization to aggregate signature verification
+for the case that all signatures are on the same message.</t>
+<t>The Sign, Verify, and AggregateVerify functions
+are identical to CoreSign, CoreVerify, and CoreAggregateVerify
+(<xref target="coreops"></xref>), respectively.
+In addition, a proof of possession scheme defines three functions beyond
+the standard API (<xref target="blsapi"></xref>):</t>
+
+<ul>
+<li><t>PopProve(SK) -&gt; proof: an algorithm that generates a proof of possession
+for the public key corresponding to secret key SK.</t>
+</li>
+<li><t>PopVerify(PK, proof) -&gt; VALID or INVALID:
+an algorithm that outputs VALID if proof is valid for PK, and INVALID otherwise.</t>
+</li>
+<li><t>FastAggregateVerify((PK_1, ..., PK_n), message, signature) -&gt; VALID or INVALID:
+a verification algorithm for the aggregate of multiple signatures on
+the same message.
+This function is faster than AggregateVerify.</t>
+</li>
+</ul>
+<t>All public keys used by Verify, AggregateVerify, and FastAggregateVerify
+MUST be accompanied by a proof of possession, and the result of evaluating
+PopVerify on each public key and its proof MUST be VALID.</t>
+
+<section anchor="popparams"><name>Parameters</name>
+<t>In addition to the parameters required to instantiate the core operations
+(<xref target="coreparams"></xref>), a proof of possession scheme requires one further parameter:</t>
+
+<ul>
+<li><t>hash_pubkey_to_point(PK) -&gt; P: a cryptographic hash function that takes as
+input a public key and outputs a point in the same subgroup as the
+hash_to_point algorithm used to instantiate the core operations.</t>
+<t>For security, this function MUST be domain separated from the hash_to_point function.
+In addition, this function MUST be either a random oracle encoding or a
+nonuniform encoding, as defined in <xref target="I-D.irtf-cfrg-hash-to-curve"></xref>.</t>
+<t>The RECOMMENDED way of instantiating hash_pubkey_to_point is to use
+the same hash-to-curve function as hash_to_point, with a
+different domain separation tag (see <xref target="I-D.irtf-cfrg-hash-to-curve"></xref>, Section 3.1).
+<xref target="ciphersuites-format"></xref> discusses the RECOMMENDED way to construct the
+domain separation tag.</t>
+</li>
+</ul>
+</section>
+
+<section anchor="popprove"><name>PopProve</name>
+<t>This function recomputes the public key coresponding to the input SK.
+Implementations MAY instead implement an interface that takes the
+public key as input.</t>
+<t>Note that the point P and the point_to_pubkey and point_to_signature
+functions are defined in <xref target="coreparams"></xref>.
+The hash_pubkey_to_point function is defined in <xref target="popparams"></xref>.</t>
+
+<artwork>proof = PopProve(SK)
+
+Inputs:
+- SK, a secret key in the format output by KeyGen.
+
+Outputs:
+- proof, an octet string.
+
+Procedure:
+1. PK = SkToPk(SK)
+2. Q = hash_pubkey_to_point(PK)
+3. R = SK * Q
+4. proof = point_to_signature(R)
+5. return proof
+</artwork>
+</section>
+
+<section anchor="popverify"><name>PopVerify</name>
+<t>PopVerify uses several functions defined in <xref target="coreops"></xref>.
+The hash_pubkey_to_point function is defined in <xref target="popparams"></xref>.</t>
+<t>As an optimization, implementations MAY cache the result of PopVerify
+in order to avoid unnecessarily repeating validation for known keys.</t>
+
+<artwork>result = PopVerify(PK, proof)
+
+Inputs:
+- PK, a public key in the format output by SkToPk.
+- proof, an octet string in the format output by PopProve.
+
+Outputs:
+- result, either VALID or INVALID
+
+Procedure:
+1. R = signature_to_point(proof)
+2. If R is INVALID, return INVALID
+3. If signature_subgroup_check(R) is INVALID, return INVALID
+4. If KeyValidate(PK) is INVALID, return INVALID
+5. xP = pubkey_to_point(PK)
+6. Q = hash_pubkey_to_point(PK)
+7. C1 = pairing(Q, xP)
+8. C2 = pairing(R, P)
+9. If C1 == C2, return VALID, else return INVALID
+</artwork>
+</section>
+
+<section anchor="fastaggregateverify"><name>FastAggregateVerify</name>
+<t>FastAggregateVerify uses several functions defined in <xref target="coreops"></xref>.</t>
+<t>All public keys passed as arguments to this algorithm MUST have a
+corresponding proof of possession, and the result of evaluating
+PopVerify on each public key and its proof MUST be VALID.
+The caller is responsible for ensuring that this precondition is met.
+If it is violated, this scheme provides no security against aggregate
+signature forgery.</t>
+
+<artwork>result = FastAggregateVerify((PK_1, ..., PK_n), message, signature)
+
+Inputs:
+- PK_1, ..., PK_n, public keys in the format output by SkToPk.
+- message, an octet string.
+- signature, an octet string output by Aggregate.
+
+Outputs:
+- result, either VALID or INVALID.
+
+Preconditions:
+- n &gt;= 1, otherwise return INVALID.
+- The caller MUST know a proof of possession for all PK_i, and the
+  result of evaluating PopVerify on PK_i and this proof MUST be VALID.
+  See discussion above.
+
+Procedure:
+1. aggregate = pubkey_to_point(PK_1)
+2. for i in 2, ..., n:
+3.     next = pubkey_to_point(PK_i)
+4.     aggregate = aggregate + next
+5. PK = point_to_pubkey(aggregate)
+6. return CoreVerify(PK, message, signature)
+</artwork>
+</section>
+</section>
+</section>
+
+<section anchor="ciphersuites"><name>Ciphersuites</name>
+<t>This section defines the format for a BLS ciphersuite.
+It also gives concrete ciphersuites based on the BLS12-381 pairing-friendly
+elliptic curve <xref target="I-D.irtf-cfrg-pairing-friendly-curves"></xref>.</t>
+
+<section anchor="ciphersuites-format"><name>Ciphersuite format</name>
+<t>A ciphersuite specifies all parameters from <xref target="coreparams"></xref>,
+a scheme from <xref target="schemes"></xref>, and any parameters the scheme requires.
+In particular, a ciphersuite comprises:</t>
+
+<ul>
+<li><t>ID: the ciphersuite ID, an ASCII string. The REQUIRED format for
+this string is</t>
+<t>&quot;BLS_SIG_&quot; || H2C_SUITE_ID || SC_TAG || &quot;_&quot;</t>
+
+<ul>
+<li><t>Strings in double quotes are ASCII-encoded literals.</t>
+</li>
+<li><t>H2C_SUITE_ID is the suite ID of the hash-to-curve suite
+used to define the hash_to_point and hash_pubkey_to_point
+functions.</t>
+</li>
+<li><t>SC_TAG is a string indicating the scheme and, optionally, additional information.
+The first three characters of this string MUST chosen as follows:</t>
+
+<ul>
+<li>&quot;NUL&quot; if SC is basic,</li>
+<li>&quot;AUG&quot; if SC is message-augmentation, or</li>
+<li>&quot;POP&quot; if SC is proof-of-possession.</li>
+<li>Other values MUST NOT be used.</li>
+</ul>
+<t>SC_TAG MAY be used to encode other information about the
+ciphersuite, for example, a version number.
+When used in this way, SC_TAG MUST contain only ASCII characters
+between 0x21 and 0x7e (inclusive), except that it MUST NOT contain
+underscore (0x5f).</t>
+<t>The RECOMMENDED way to add user-defined information to SC_TAG is to
+append a colon (':', ASCII 0x3a) and then the informational string.
+For example, &quot;NUL:version=2&quot; is an appropriate SC_TAG value.</t>
+</li>
+</ul>
+<t>Note that hash-to-curve suite IDs always include a trailing underscore,
+so no field separator is needed between H2C_SUITE_ID and SC_TAG.</t>
+</li>
+<li><t>SC: the scheme, one of basic, message-augmentation, or proof-of-possession.</t>
+</li>
+<li><t>SV: the signature variant, either minimal-signature-size or
+minimal-pubkey-size.</t>
+</li>
+<li><t>EC: a pairing-friendly elliptic curve, plus all associated functionality
+(<xref target="definitions"></xref>).</t>
+</li>
+<li><t>H: a cryptographic hash function.</t>
+</li>
+<li><t>hash_to_point: a hash from arbitrary strings to elliptic curve points.
+hash_to_point MUST be defined in terms of a hash-to-curve suite <xref target="I-D.irtf-cfrg-hash-to-curve"></xref>.</t>
+<t>The RECOMMENDED hash-to-curve domain separation tag is the ciphersuite ID string defined above.</t>
+</li>
+<li><t>hash_pubkey_to_point (only specified when SC is proof-of-possession):
+a hash from serialized public keys to elliptic curve points.
+hash_pubkey_to_point MUST be defined in terms of a
+hash-to-curve suite <xref target="I-D.irtf-cfrg-hash-to-curve"></xref>.</t>
+<t>The hash-to-curve domain separation tag MUST be distinct from the domain
+separation tag used for hash_to_point.
+It is RECOMMENDED that the domain separation tag be constructed similarly to
+the ciphersuite ID string, namely:</t>
+<t>&quot;BLS_POP_&quot; || H2C_SUITE_ID || SC_TAG || &quot;_&quot;</t>
+</li>
+</ul>
+</section>
+
+<section anchor="ciphersuites-for-bls12-381"><name>Ciphersuites for BLS12-381</name>
+<t>The following ciphersuites are all built on the BLS12-381 elliptic curve.
+The required primitives for this curve are given in <xref target="bls12381def"></xref>.</t>
+<t>These ciphersuites use the hash-to-curve suites
+BLS12381G1_XMD:SHA-256_SSWU_RO_ and
+BLS12381G2_XMD:SHA-256_SSWU_RO_
+defined in <xref target="I-D.irtf-cfrg-hash-to-curve"></xref>, Section 8.7.
+Each ciphersuite defines a unique hash_to_point function by specifying
+a domain separation tag (see [@I-D.irtf-cfrg-hash-to-curve, Section 3.1).</t>
+
+<section anchor="basic"><name>Basic</name>
+<t>BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_NUL_ is defined as follows:</t>
+
+<ul>
+<li><t>SC: basic</t>
+</li>
+<li><t>SV: minimal-signature-size</t>
+</li>
+<li><t>EC: BLS12-381, as defined in <xref target="bls12381def"></xref>.</t>
+</li>
+<li><t>H: SHA-256</t>
+</li>
+<li><t>hash_to_point: BLS12381G1_XMD:SHA-256_SSWU_RO_ with the ASCII-encoded domain separation tag</t>
+<t>BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_NUL_</t>
+</li>
+</ul>
+<t>BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_ is identical to
+BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_NUL_, except for the
+following parameters:</t>
+
+<ul>
+<li><t>SV: minimal-pubkey-size</t>
+</li>
+<li><t>hash_to_point: BLS12381G2_XMD:SHA-256_SSWU_RO_ with the ASCII-encoded domain separation tag</t>
+<t>BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_</t>
+</li>
+</ul>
+</section>
+
+<section anchor="message-augmentation"><name>Message augmentation</name>
+<t>BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_AUG_ is defined as follows:</t>
+
+<ul>
+<li><t>SC: message-augmentation</t>
+</li>
+<li><t>SV: minimal-signature-size</t>
+</li>
+<li><t>EC: BLS12-381, as defined in <xref target="bls12381def"></xref>.</t>
+</li>
+<li><t>H: SHA-256</t>
+</li>
+<li><t>hash_to_point: BLS12381G1_XMD:SHA-256_SSWU_RO_ with the ASCII-encoded domain separation tag</t>
+<t>BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_AUG_</t>
+</li>
+</ul>
+<t>BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_AUG_ is identical to
+BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_AUG_, except for the
+following parameters:</t>
+
+<ul>
+<li><t>SV: minimal-pubkey-size</t>
+</li>
+<li><t>hash_to_point: BLS12381G2_XMD:SHA-256_SSWU_RO_ with the ASCII-encoded domain separation tag</t>
+<t>BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_AUG_</t>
+</li>
+</ul>
+</section>
+
+<section anchor="proof-of-possession"><name>Proof of possession</name>
+<t>BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_POP_ is defined as follows:</t>
+
+<ul>
+<li><t>SC: proof-of-possession</t>
+</li>
+<li><t>SV: minimal-signature-size</t>
+</li>
+<li><t>EC: BLS12-381, as defined in <xref target="bls12381def"></xref>.</t>
+</li>
+<li><t>H: SHA-256</t>
+</li>
+<li><t>hash_to_point: BLS12381G1_XMD:SHA-256_SSWU_RO_ with the ASCII-encoded domain separation tag</t>
+<t>BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_POP_</t>
+</li>
+<li><t>hash_pubkey_to_point: BLS12381G1_XMD:SHA-256_SSWU_RO_ with the ASCII-encoded domain separation tag</t>
+<t>BLS_POP_BLS12381G1_XMD:SHA-256_SSWU_RO_POP_</t>
+</li>
+</ul>
+<t>BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_ is identical to
+BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_POP_, except for the
+following parameters:</t>
+
+<ul>
+<li><t>SV: minimal-pubkey-size</t>
+</li>
+<li><t>hash_to_point: BLS12381G2_XMD:SHA-256_SSWU_RO_ with the ASCII-encoded domain separation tag</t>
+<t>BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_</t>
+</li>
+<li><t>hash_pubkey_to_point: BLS12381G2_XMD:SHA-256_SSWU_RO_ with the ASCII-encoded domain separation tag</t>
+<t>BLS_POP_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_</t>
+</li>
+</ul>
+</section>
+</section>
+</section>
+
+<section anchor="security-considerations"><name>Security Considerations</name>
+
+<section anchor="choosesalt"><name>Choosing a salt value for KeyGen</name>
+<t>KeyGen uses HKDF to generate keys.
+The security analysis of HKDF assumes that the salt value is either
+empty (in which case it is replaced by the all-zeros string) or an
+unstructured string.
+Versions of this document prior to number 4 set the salt parameter
+to &quot;BLS-SIG-KEYGEN-SALT-&quot;, which does not meet this requirement.
+If, as is common, the hash function H is modeled as a random oracle,
+this requirement is obviated.</t>
+<t>When choosing a salt value other than &quot;BLS-SIG-KEYGEN-SALT-&quot; or
+H(&quot;BLS-SIG-KEYGEN-SALT-&quot;), the RECOMMENDED method is to fix a
+uniformly random octet string whose length equals the output
+length of H.</t>
+</section>
+
+<section anchor="pubkeyvalid"><name>Validating public keys</name>
+<t>All algorithms in <xref target="coreops"></xref> and <xref target="schemes"></xref> that operate on public keys
+require first validating those keys.
+For the basic and message augmentation schemes, the use of KeyValidate
+is REQUIRED.
+For the proof of possession scheme, each public key MUST be accompanied by
+a proof of possession, and use of PopVerify is REQUIRED.</t>
+<t>KeyValidate requires all public keys to represent valid, non-identity points
+in the correct subgroup.
+A valid point and subgroup membership are required to ensure that the pairing
+operation is defined (<xref target="membershipcheck"></xref>).</t>
+<t>A non-identity point is required because the identity public key has the
+property that the corresponding secret key is equal to zero, which means
+that the identity point is the unique valid signature for every message
+under this key.
+A malicious signer could take advantage of this fact to equivocate about
+which message he signed.
+While non-equivocation is not a required property for a signature scheme,
+equivocation is infeasible for BLS signatures under any nonzero secret key
+because it would require finding colliding inputs to the hash_to_point
+function, which is assumed to be collision resistant.
+Prohibiting SK == 0 eliminates the exceptional case, which may help to prevent
+equivocation-related security issues in protocols that use BLS signatures.</t>
+</section>
+
+<section anchor="membershipcheck"><name>Skipping membership check</name>
+<t>Some existing implementations skip the signature_subgroup_check invocation
+in CoreVerify (<xref target="coreverify"></xref>), whose purpose is ensuring that the signature
+is an element of a prime-order subgroup.
+This check is REQUIRED of conforming implementations, for two reasons.</t>
+
+<ol>
+<li><t>For most pairing-friendly elliptic curves used in practice, the pairing
+operation e (<xref target="definitions"></xref>) is undefined when its input points are not
+in the prime-order subgroups of E1 and E2.
+The resulting behavior is unpredictable, and may enable forgeries.</t>
+</li>
+<li><t>Even if the pairing operation behaves properly on inputs that are outside
+the correct subgroups, skipping the subgroup check breaks the strong
+unforgeability property <xref target="ADR02"></xref>.</t>
+</li>
+</ol>
+</section>
+
+<section anchor="side-channel-attacks"><name>Side channel attacks</name>
+<t>Implementations of the signing algorithm SHOULD protect the secret key
+from side-channel attacks.
+One method for protecting against certain side-channel attacks is ensuring
+that the implementation executes exactly the same sequence of
+instructions and performs exactly the same memory accesses, for any
+value of the secret key.
+In other words, implementations on the underlying pairing-friendly elliptic
+curve SHOULD run in constant time.</t>
+</section>
+
+<section anchor="randomness-considerations"><name>Randomness considerations</name>
+<t>BLS signatures are deterministic. This protects against attacks
+arising from signing with bad randomness, for example, the nonce reuse
+attack on ECDSA <xref target="HDWH12"></xref>.</t>
+<t>As discussed in <xref target="keygen"></xref>, the IKM input to KeyGen MUST be infeasible
+to guess and MUST be kept secret.
+One possibility is to generate IKM from a trusted source of randomness.
+Guidelines on constructing such a source are outside the scope of this
+document.</t>
+</section>
+
+<section anchor="implementing-hash-to-point-and-hash-pubkey-to-point"><name>Implementing hash_to_point and hash_pubkey_to_point</name>
+<t>The security analysis models hash_to_point and hash_pubkey_to_point
+as random oracles.
+It is crucial that these functions are implemented using a cryptographically
+secure hash function.
+For this purpose, implementations MUST meet the requirements of
+<xref target="I-D.irtf-cfrg-hash-to-curve"></xref>.</t>
+<t>In addition, ciphersuites MUST specify unique domain separation tags
+for hash_to_point and hash_pubkey_to_point.
+The domain separation tag format used in <xref target="ciphersuites"></xref> is the RECOMMENDED one.</t>
+</section>
+</section>
+
+<section anchor="implementation-status"><name>Implementation Status</name>
+<t>This section will be removed in the final version of the draft.
+There are currently several implementations of BLS signatures using the BLS12-381 curve.</t>
+
+<ul>
+<li><t>Algorand: <eref target="https://github.com/kwantam/bls_sigs_ref">bls_sigs_ref</eref>.</t>
+</li>
+<li><t>Chia: <eref target="https://github.com/Chia-Network/bls-signatures/blob/master/SPEC.md">spec</eref>
+<eref target="https://github.com/Chia-Network/bls-signatures">python/C++</eref>.  Here, they are
+swapping G1 and G2 so that the public keys are small, and the benefits
+of avoiding a membership check during signature verification would even be more
+substantial.  The current implementation does not seem to implement the membership check.
+Chia uses the Fouque-Tibouchi hashing to the curve, which can be done in constant time.</t>
+</li>
+<li><t>Dfinity: <eref target="https://github.com/dfinity/go-dfinity-crypto">go</eref> <eref target="https://github.com/dfinity/bls">BLS</eref>.  The current implementations do not seem to implement the membership check.</t>
+</li>
+<li><t>Ethereum 2.0: <eref target="https://github.com/ethereum/eth2.0-specs/blob/master/specs/bls_signature.md">spec</eref>.</t>
+</li>
+</ul>
+</section>
+
+<section anchor="related-standards"><name>Related Standards</name>
+
+<ul>
+<li><t>Pairing-friendly curves, <xref target="I-D.irtf-cfrg-pairing-friendly-curves"></xref></t>
+</li>
+<li><t>Pairing-based Identity-Based Encryption <eref target="https://ieeexplore.ieee.org/document/6662370">IEEE 1363.3</eref>.</t>
+</li>
+<li><t>Identity-Based Cryptography Standard <eref target="https://tools.ietf.org/html/rfc5091">rfc5901</eref>.</t>
+</li>
+<li><t>Hashing to Elliptic Curves <xref target="I-D.irtf-cfrg-hash-to-curve"></xref>, in order to implement the hash function hash_to_point.</t>
+</li>
+<li><t>EdDSA <eref target="https://tools.ietf.org/html/rfc8032">rfc8032</eref>.</t>
+</li>
+</ul>
+</section>
+
+<section anchor="iana-considerations"><name>IANA Considerations</name>
+<t>TBD (consider to register ciphersuite identifiers for BLS signature and underlying
+  pairing curves)</t>
+</section>
+
+</middle>
+
+<back>
+<references><name>Normative References</name>
+<reference anchor="ZCash" target="https://github.com/zkcrypto/pairing/blob/34aa52b0f7bef705917252ea63e5a13fa01af551/src/bls12_381/README.md#serialization">
+  <front>
+    <title>BLS12-381</title>
+    <author>
+      <organization>Electric Coin Company</organization>
+    </author>
+    <date year="2017" month="July"></date>
+  </front>
+</reference>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"/>
+</references>
+<references><name>Informative References</name>
+<reference anchor="Bol03" target="https://link.springer.com/chapter/10.1007%2F3-540-36288-6_3">
+  <front>
+    <title>Threshold Signatures, Multisignatures and Blind Signatures Based on the Gap-Diffie-Hellman-Group Signature Scheme</title>
+    <author fullname="Alexandra Boldyreva" initials="A." surname="Boldyreva">
+      <organization>University of California, San Diego</organization>
+    </author>
+    <date year="2003" month="January"></date>
+  </front>
+</reference>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.irtf-cfrg-pairing-friendly-curves.xml"/>
+<reference anchor="Bowe19" target="https://eprint.iacr.org/2019/814">
+  <front>
+    <title>Faster subgroup checks for BLS12-381</title>
+    <author fullname="Sean Bowe" initials="S." surname="Bowe">
+      <organization>Electric Coin Company</organization>
+    </author>
+    <date year="2019" month="July"></date>
+  </front>
+</reference>
+<reference anchor="ADR02" target="https://doi.org/10.1007/3-540-46035-7_6">
+  <front>
+    <title>On the Security of Joint Signature and Encryption</title>
+    <author fullname="Jee Hea An" initials="J. H." surname="An">
+      <organization>SoftMax Inc.</organization>
+    </author>
+    <author fullname="Yevgeniy Dodis" initials="Y." surname="Dodis">
+      <organization>New York University</organization>
+    </author>
+    <author fullname="Tal Rabin" initials="T." surname="Rabin">
+      <organization>IBM T.J. Watson Research Center</organization>
+    </author>
+    <date year="2002" month="April"></date>
+  </front>
+</reference>
+<reference anchor="BLS01" target="https://www.iacr.org/archive/asiacrypt2001/22480516.pdf">
+  <front>
+    <title>Short signatures from the Weil pairing</title>
+    <author fullname="Dan Boneh" initials="D." surname="Boneh">
+      <organization>Stanford University</organization>
+    </author>
+    <author fullname="Ben Lynn" initials="B." surname="Lynn">
+      <organization>Stanford University</organization>
+    </author>
+    <author fullname="Hovav Shacham" initials="H." surname="Shacham">
+      <organization>Stanford University</organization>
+    </author>
+    <date year="2001" month="December"></date>
+  </front>
+</reference>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.8017.xml"/>
+<reference anchor="Scott21" target="https://eprint.iacr.org/2021/1130.pdf">
+  <front>
+    <title>A note on group membership tests for G1, G2 and GT on BLS pairing-friendly curves</title>
+    <author fullname="Michael Scott" initials="M." surname="Scott">
+      <organization>Technical Innovation Institute</organization>
+    </author>
+    <date year="2021" month="September"></date>
+  </front>
+</reference>
+<reference anchor="LOSSW06" target="https://link.springer.com/chapter/10.1007/11761679_28">
+  <front>
+    <title>Sequential Aggregate Signatures and Multisignatures Without Random Oracles</title>
+    <author fullname="Steve Lu" initials="S." surname="Lu">
+      <organization>University of California, Los Angeles</organization>
+    </author>
+    <author fullname="Rafail Ostrovsky" initials="R." surname="Ostrovsky">
+      <organization>University of California, Los Angeles</organization>
+    </author>
+    <author fullname="Amit Sahai" initials="A." surname="Sahai">
+      <organization>University of California, Los Angeles</organization>
+    </author>
+    <author fullname="Hovav Shacham" initials="H." surname="Shacham">
+      <organization>Weizmann Institute</organization>
+    </author>
+    <author fullname="Brent Waters" initials="B." surname="Waters">
+      <organization>SRI International</organization>
+    </author>
+    <date year="2006" month="May"></date>
+  </front>
+</reference>
+<reference anchor="RY07" target="https://link.springer.com/chapter/10.1007%2F978-3-540-72540-4_13">
+  <front>
+    <title>The Power of Proofs-of-Possession: Securing Multiparty Signatures against Rogue-Key Attacks</title>
+    <author fullname="Thomas Ristenpart" initials="T." surname="Ristenpart">
+      <organization>University of California, San Diego</organization>
+    </author>
+    <author fullname="Scott Yilek" initials="S." surname="Yilek">
+      <organization>University of California, San Diego</organization>
+    </author>
+    <date year="2007" month="May"></date>
+  </front>
+</reference>
+<reference anchor="GMT19" target="">
+  <front>
+    <title>Cocks–Pinch curves of embedding degrees five to eight and optimal ate pairing computation</title>
+    <author initials="A." surname="Guillevic">
+      <organization></organization>
+    </author>
+    <author fullname="Simon Masson" initials="S. " surname="Masson">
+      <organization></organization>
+    </author>
+    <author fullname="Emmanuel Thome" initials="E." surname="Thome">
+      <organization></organization>
+    </author>
+    <date year="2019"></date>
+  </front>
+</reference>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5869.xml"/>
+<reference anchor="BGLS03" target="https://link.springer.com/chapter/10.1007%2F3-540-39200-9_26">
+  <front>
+    <title>Aggregate and verifiably encrypted signatures from bilinear maps</title>
+    <author fullname="Dan Boneh" initials="D." surname="Boneh">
+      <organization>Stanford University</organization>
+    </author>
+    <author fullname="Craig Gentry" initials="C." surname="Gentry">
+      <organization>Stanford University</organization>
+    </author>
+    <author fullname="Ben Lynn" initials="B." surname="Lynn">
+      <organization>Stanford University</organization>
+    </author>
+    <author fullname="Hovav Shacham" initials="H." surname="Shacham">
+      <organization>Stanford University</organization>
+    </author>
+    <date year="2003" month="May"></date>
+  </front>
+</reference>
+<reference anchor="BNN07" target="https://link.springer.com/chapter/10.1007%2F978-3-540-73420-8_37">
+  <front>
+    <title>Unrestricted aggregate signatures</title>
+    <author fullname="Mihir Bellare" initials="M." surname="Bellare">
+      <organization>University of California, San Diego</organization>
+    </author>
+    <author fullname="Chanathip Namprepre" initials="C." surname="Namprempre">
+      <organization>Thammasat University</organization>
+    </author>
+    <author fullname="Gregory Neven" initials="G." surname="Neven">
+      <organization>Katholieke Universiteit Leuven</organization>
+    </author>
+    <date year="2007" month="July"></date>
+  </front>
+</reference>
+<reference anchor="BDN18" target="https://link.springer.com/chapter/10.1007/978-3-030-03329-3_15">
+  <front>
+    <title>Compact multi-signatures for shorter blockchains</title>
+    <author fullname="Dan Boneh" initials="D." surname="Boneh">
+      <organization>Stanford University</organization>
+    </author>
+    <author fullname="Manu Drijvers" initials="M." surname="Drijvers">
+      <organization>DFINITY</organization>
+    </author>
+    <author fullname="Gregory Neven" initials="G." surname="Neven">
+      <organization>ETH Zurich</organization>
+    </author>
+    <date year="2018" month="December"></date>
+  </front>
+</reference>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.irtf-cfrg-hash-to-curve.xml"/>
+<reference anchor="FIPS180-4" target="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf">
+  <front>
+    <title>FIPS Publication 180-4: Secure Hash Standard</title>
+    <author>
+      <organization>National Institute of Standards and Technology (NIST)</organization>
+    </author>
+    <date year="2015" month="August"></date>
+  </front>
+</reference>
+<reference anchor="HDWH12" target="https://www.usenix.org/system/files/conference/usenixsecurity12/sec12-final228.pdf">
+  <front>
+    <title>Mining your Ps and Qs: Detection of widespread weak keys in network devices</title>
+    <author fullname="Nadia Heninger" initials="N." surname="Heninger">
+      <organization>University of California, San Diego</organization>
+    </author>
+    <author fullname="Zakir Durumeric" initials="Z." surname="Durumeric">
+      <organization>The University of Michigan</organization>
+    </author>
+    <author fullname="Eric Wustrow" initials="E." surname="Wustrow">
+      <organization>The University of Michigan</organization>
+    </author>
+    <author fullname="J. Alex Halderman" initials="J.A." surname="Halderman">
+      <organization>The University of Michigan</organization>
+    </author>
+    <date year="2012" month="August"></date>
+  </front>
+</reference>
+</references>
+
+<section anchor="bls12381def"><name>BLS12-381</name>
+<t>The ciphersuites in <xref target="ciphersuites"></xref> are based upon the BLS12-381
+pairing-friendly elliptic curve.
+The following defines the correspondence between the primitives
+in <xref target="definitions"></xref> and the parameters given in Section 4.2.1 of
+<xref target="I-D.irtf-cfrg-pairing-friendly-curves"></xref>.</t>
+
+<ul>
+<li><t>E1, G1: the curve E and its order-r subgroup.</t>
+</li>
+<li><t>E2, G2: the curve E' and its order-r subgroup.</t>
+</li>
+<li><t>GT: the subgroup G_T.</t>
+</li>
+<li><t>P1: the point BP.</t>
+</li>
+<li><t>P2: the point BP'.</t>
+</li>
+<li><t>e: the optimal Ate pairing defined in Appendix A of
+<xref target="I-D.irtf-cfrg-pairing-friendly-curves"></xref>.</t>
+</li>
+<li><t>point_to_octets and octets_to_point use the compressed
+serialization formats for E1 and E2 defined by <xref target="ZCash"></xref>.</t>
+</li>
+<li><t>subgroup_check MAY use either the naive check described
+in <xref target="definitions"></xref> or the optimized checks given by <xref target="Bowe19"></xref> or <xref target="Scott21"></xref>.</t>
+</li>
+</ul>
+</section>
+
+<section anchor="test-vectors"><name>Test Vectors</name>
+<t>TBA: (i) test vectors for both variants of the signature scheme
+(signatures in G2 instead of G1) , (ii) test vectors ensuring
+membership checks, (iii) intermediate computations ctr, hm.</t>
+</section>
+
+<section anchor="security-analyses"><name>Security analyses</name>
+<t>The security properties of the BLS signature scheme are proved in <xref target="BLS01"></xref>.</t>
+<t><xref target="BGLS03"></xref> prove the security of aggregate signatures over distinct messages,
+as in the basic scheme of <xref target="schemenul"></xref>.</t>
+<t><xref target="BNN07"></xref> prove security of the message augmentation scheme of <xref target="schemeaug"></xref>.</t>
+<t><xref target="Bol03"></xref><xref target="LOSSW06"></xref><xref target="RY07"></xref> prove security of constructions related to the proof
+of possession scheme of <xref target="schemepop"></xref>.</t>
+<t><xref target="BDN18"></xref> prove the security of another rogue key defense; this
+defense is not standardized in this document.</t>
+</section>
+
+</back>
+
+</rfc>
