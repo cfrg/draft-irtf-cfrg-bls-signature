@@ -730,6 +730,25 @@ Procedure:
 5. return VALID
 ~~~
 
+## CoreEvaluate {#coreevaluate}
+
+The CoreEvaluate algorithm multiplies the secret key SK by a point Q to 
+produce another point Z.
+
+~~~
+Z = CoreEvaluate(SK, Q)
+
+Inputs:
+- SK, a secret integer such that 1 <= SK < r.
+- Q, a point
+
+Outputs:
+- Z, a public key encoded as an octet string.
+
+Procedure:
+1. return SK * Q
+~~~
+
 ## CoreSign {#coresign}
 
 The CoreSign algorithm computes a signature from SK, a secret key,
@@ -747,7 +766,7 @@ Outputs:
 
 Procedure:
 1. Q = hash_to_point(message)
-2. R = SK * Q
+2. R = CoreEvaluate(SK, Q)
 3. signature = point_to_signature(R)
 4. return signature
 ~~~
@@ -1121,6 +1140,114 @@ Procedure:
 4.     aggregate = aggregate + next
 5. PK = point_to_pubkey(aggregate)
 6. return CoreVerify(PK, message, signature)
+~~~
+
+# Interactive BLS Signatures {#interactive-bls}
+
+This section describes an private, interactive protocol between signer (server)
+and verifier (client) for computing the BLS signature variants in {{schemes}}. 
+At a high level, the signer and verifier interact to compute a blind signature
+protocol yielding `signature = Sign(SK, message)`, where `msg` is the private
+message to be signed,  and `SK` is the server's private key. In this protocol,
+the signer learns nothing of `message`, whereas the verifier learns `signature`
+and nothing of `SK`.
+
+This protocol roughly runs as follows:
+
+~~~
+   Verifier(PK, message)                       Signer(SK)
+  -------------------------------------------------------
+   blind_msg, R = Blind(PK, message)
+
+                         blind_msg
+                        ---------->
+
+                     blind_sig = BlindSign(SK, blind_msg)
+
+                         blind_sig
+                        <----------
+
+  signature = Finalize(PK, message, R, blind_sig)
+~~~
+
+Upon completion, correctness requires that clients can verify signature `signature`
+over private input message `message` using the server public key `PK` by invoking
+the Verify routine. The finalization function performs that check before returning
+the signature.
+
+## Blind {#proto-blind}
+
+The Blind function takes as input the signer public key `PK` and message to sign
+`message` and produces a blinded message and blind inverse.
+
+~~~
+signature = Blind(PK, message)
+
+Inputs:
+- PK, a public key in the format output by SkToPk.
+- message, an octet string.
+
+Outputs:
+- R, a scalar in G1.
+- blinded_msg, an octet string.
+
+Procedure:
+1. R = G1.RandomScalar()
+2. T = hash_to_point(PK || message)
+3. blinded_msg = point_to_signature(R * T)
+4. return R, blinded_msg
+~~~
+
+## BlindSign {#proto-sign}
+
+The BlindSign function invokes CoreEvaluate directly without modification.
+Signers SHOULD perform a membership check on the input blind message Q before
+the result is passed to CoreEvaluate. 
+
+<!-- What is the best way to invoke a membership test here? -->
+
+~~~
+signature = BlindSign(blinded_msg)
+
+Inputs:
+- blind_message, an octet string.
+
+Outputs:
+- blind_sig, an octet string.
+
+Procedure:
+1. Q = signature_to_point(blinded_message)
+2. Z = CoreEvaluate(SK, Q)
+3. blind_sig = point_to_signature(Z)
+4. return blind_sig
+~~~
+
+## Finalize {#proto-finalize}
+
+The Finalize function unblinds the signer's blind signature, verifies
+the corresponding signature, and outputs the resulting signature if valid.
+Otherwise, it raises an error. Verifiers SHOULD perform a membership check 
+on the input blind signature Y before the result is combined with the blind
+inverse (R\_inv). 
+
+~~~
+signature = Finalize(message, PK, R, blind_sig)
+
+Inputs:
+- message, an octet string.
+- PK, a public key in the format output by SkToPk.
+- R, blind inverse output from Blind.
+- blind_sig, an octet string.
+
+Outputs:
+- blind_sig, an octet string.
+
+Procedure:
+1. Y = signature_to_point(blind_sig)
+2. R_inv = R^-1
+3. signature = point_to_signature(R_inv * Y)
+4. if CoreVerify(PK, message, signature), return signature
+5. raise "invalid signature" error
 ~~~
 
 # Ciphersuites {#ciphersuites}
