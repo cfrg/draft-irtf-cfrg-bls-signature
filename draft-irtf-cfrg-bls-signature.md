@@ -8,7 +8,7 @@ workgroup = "CFRG"
 
 [seriesInfo]
 name = "Internet-Draft"
-value = "draft-irtf-cfrg-bls-signature-07"
+value = "draft-irtf-cfrg-bls-signature-06"
 status = "informational"
 
 [[author]]
@@ -71,16 +71,6 @@ organization="Algorand"
   [author.address.postal]
   city = "Boston, MA"
   country = "USA"
-[[author]]
-initials="J."
-surname="Bradley"
-fullname="John Bradley"
-organization="Yubico"
- [author.address]
- email = "jbradley@yubico.com"
-  [author.address.postal]
-  city = "Vancouver, BC"
-  country = "Canada"
 %%%
 
 <reference anchor="Scott21" target="https://eprint.iacr.org/2021/1130.pdf">
