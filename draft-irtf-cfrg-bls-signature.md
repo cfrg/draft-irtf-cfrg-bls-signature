@@ -21,6 +21,16 @@ organization="Stanford University"
   [author.address.postal]
   city = ""
   country = "USA"
+  [[author]]
+initials="J."
+surname="Bradley"
+fullname="John Bradley"
+organization="Yubico"
+ [author.address]
+ email = "jbradley@yubico.com"
+  [author.address.postal]
+  city = "Vancouver, BC"
+  country = "Canada"
 [[author]]
 initials="S."
 surname="Gorbunov"
