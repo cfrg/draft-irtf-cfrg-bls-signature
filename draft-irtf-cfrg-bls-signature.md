@@ -459,7 +459,7 @@ The following notation and primitives are used:
     is an element of the subgroup of order r, and INVALID otherwise.
     This function can always be implemented by checking that r \* P is equal
     to the identity element. In some cases, faster checks may also exist,
-    e.g., [@Bowe19, @Scott21].
+    e.g., [@Bowe19; @Scott21].
 
 * I2OSP and OS2IP are the functions defined in [@RFC8017], Section 4.
 
